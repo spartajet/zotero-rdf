@@ -95,7 +95,8 @@ impl<'a> Extractor<'a> {
 
         info!(
             "提取完成: {} 个条目, 跳过 {} 个附件",
-            items.len(), attachment_count
+            items.len(),
+            attachment_count
         );
         items
     }
@@ -114,7 +115,8 @@ impl<'a> Extractor<'a> {
         let abstract_note = self.get_literal(subject, &vocab::DCTERMS_ABSTRACT);
 
         // DOI 提取：优先从 bibo:doi 获取，否则从 URI 中提取
-        let doi = self.get_literal(subject, &vocab::BIBO_DOI)
+        let doi = self
+            .get_literal(subject, &vocab::BIBO_DOI)
             .or_else(|| extract_doi_from_uri(&uri));
 
         // 3. 复杂属性：作者 (关键点)
@@ -199,7 +201,9 @@ impl<'a> Extractor<'a> {
                 if let oxrdf::TermRef::NamedNode(nn) = &triple.object {
                     // 直接使用 NamedNode 创建 Subject
                     let attachment_subject = Subject::from(nn.clone());
-                    if let Some(attachment) = self.extract_attachment_from_subject(&attachment_subject) {
+                    if let Some(attachment) =
+                        self.extract_attachment_from_subject(&attachment_subject)
+                    {
                         trace!(
                             "提取附件: {}",
                             attachment.title.as_deref().unwrap_or("(无标题)")
@@ -209,7 +213,9 @@ impl<'a> Extractor<'a> {
                 } else if let oxrdf::TermRef::BlankNode(bn) = &triple.object {
                     // 附件可能是 BlankNode
                     let attachment_subject = Subject::from(bn.clone());
-                    if let Some(attachment) = self.extract_attachment_from_subject(&attachment_subject) {
+                    if let Some(attachment) =
+                        self.extract_attachment_from_subject(&attachment_subject)
+                    {
                         attachments.push(attachment);
                     }
                 }

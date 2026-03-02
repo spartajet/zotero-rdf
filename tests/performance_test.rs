@@ -5,7 +5,7 @@
 use std::sync::Once;
 use std::time::Instant;
 use tracing::info;
-use zotero_rdf::{parse_file, parse_file_with_stats, Extractor};
+use zotero_rdf::{Extractor, parse_file, parse_file_with_stats};
 
 const TEST_RDF_FILE: &str = "rdfs/gear-measure-without-attachments.rdf";
 
@@ -39,7 +39,11 @@ fn test_parsing_performance() {
 
     // 性能基准：5000 个三元组应该在 1 秒内完成
     // 注意：这个基准可能需要根据实际硬件调整
-    let max_expected_ms = if stats.triples_count > 5000 { 2000 } else { 1000 };
+    let max_expected_ms = if stats.triples_count > 5000 {
+        2000
+    } else {
+        1000
+    };
     assert!(
         parse_time.as_millis() < max_expected_ms as u128,
         "Parsing {} triples took {:?}, expected < {}ms",
@@ -156,21 +160,9 @@ fn test_parsing_consistency() {
     // 验证所有运行结果一致
     let first = &results[0];
     for (i, result) in results.iter().enumerate() {
-        assert_eq!(
-            result.0, first.0,
-            "Graph size mismatch in run {}",
-            i + 1
-        );
-        assert_eq!(
-            result.1, first.1,
-            "Triples count mismatch in run {}",
-            i + 1
-        );
-        assert_eq!(
-            result.2, first.2,
-            "Error count mismatch in run {}",
-            i + 1
-        );
+        assert_eq!(result.0, first.0, "Graph size mismatch in run {}", i + 1);
+        assert_eq!(result.1, first.1, "Triples count mismatch in run {}", i + 1);
+        assert_eq!(result.2, first.2, "Error count mismatch in run {}", i + 1);
     }
 }
 
@@ -191,7 +183,12 @@ fn test_extraction_consistency() {
 
         let total_authors: usize = items.iter().map(|item| item.authors.len()).sum();
 
-        info!("Run {}: {} items, {} total authors", i + 1, items.len(), total_authors);
+        info!(
+            "Run {}: {} items, {} total authors",
+            i + 1,
+            items.len(),
+            total_authors
+        );
 
         item_counts.push(items.len());
         author_counts.push(total_authors);
@@ -200,12 +197,14 @@ fn test_extraction_consistency() {
     // 验证所有运行结果一致
     for (i, (items, authors)) in item_counts.iter().zip(author_counts.iter()).enumerate() {
         assert_eq!(
-            *items, item_counts[0],
+            *items,
+            item_counts[0],
             "Item count mismatch in run {}",
             i + 1
         );
         assert_eq!(
-            *authors, author_counts[0],
+            *authors,
+            author_counts[0],
             "Author count mismatch in run {}",
             i + 1
         );

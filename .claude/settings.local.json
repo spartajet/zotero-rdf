@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cargo search oxrdf)",
+      "Bash(cargo search oxrdfxml)",
+      "Bash(cargo build)",
+      "mcp__zread__search_doc",
+      "Bash(cargo test)",
+      "Bash(git add Cargo.toml Cargo.lock src/lib.rs src/error.rs src/parser.rs src/vocab.rs tests/integration_test.rs docs/plan-p1.md)",
+      "Bash(git commit:*)",
+      "Bash(cargo test test_extract_items -- --nocapture)"
+    ]
+  }
+}
