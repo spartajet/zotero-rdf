@@ -24,14 +24,10 @@ pub const RDF_VALUE: Lazy<NamedNode> =
 // Zotero Specifics
 pub const Z_ITEM_TYPE: Lazy<NamedNode> =
     Lazy::new(|| NamedNode::new_unchecked(format!("{}itemType", NS_ZOTERO)));
-pub const Z_KEY: Lazy<NamedNode> =
-    Lazy::new(|| NamedNode::new_unchecked(format!("{}key", NS_ZOTERO)));
 
 // Dublin Core
 pub const DC_TITLE: Lazy<NamedNode> =
     Lazy::new(|| NamedNode::new_unchecked(format!("{}title", NS_DC)));
-pub const DC_CREATOR: Lazy<NamedNode> =
-    Lazy::new(|| NamedNode::new_unchecked(format!("{}creator", NS_DC)));
 pub const DC_DATE: Lazy<NamedNode> =
     Lazy::new(|| NamedNode::new_unchecked(format!("{}date", NS_DC)));
 pub const DC_IDENTIFIER: Lazy<NamedNode> =
@@ -44,12 +40,8 @@ pub const DCTERMS_ABSTRACT: Lazy<NamedNode> =
 // BIB (Biblio)
 pub const BIB_AUTHORS: Lazy<NamedNode> =
     Lazy::new(|| NamedNode::new_unchecked(format!("{}authors", NS_BIB)));
-pub const BIB_PAGES: Lazy<NamedNode> =
-    Lazy::new(|| NamedNode::new_unchecked(format!("{}pages", NS_BIB)));
 
 // FOAF (Author info)
-pub const FOAF_PERSON: Lazy<NamedNode> =
-    Lazy::new(|| NamedNode::new_unchecked(format!("{}Person", NS_FOAF)));
 pub const FOAF_SURNAME: Lazy<NamedNode> =
     Lazy::new(|| NamedNode::new_unchecked(format!("{}surname", NS_FOAF)));
 pub const FOAF_GIVENNAME: Lazy<NamedNode> =
@@ -58,8 +50,6 @@ pub const FOAF_GIVENNAME: Lazy<NamedNode> =
 // BIBO (Citations)
 pub const BIBO_DOI: Lazy<NamedNode> =
     Lazy::new(|| NamedNode::new_unchecked(format!("{}doi", NS_BIBO)));
-pub const BIBO_PAGES: Lazy<NamedNode> =
-    Lazy::new(|| NamedNode::new_unchecked(format!("{}pages", NS_BIBO)));
 
 // Link (Attachments)
 pub const LINK_LINK: Lazy<NamedNode> =
