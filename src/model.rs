@@ -17,6 +17,8 @@ pub struct ZoteroItem {
     pub doi: Option<String>,
     /// 摘要
     pub abstract_note: Option<String>,
+    /// 附件列表 (PDF 等)
+    pub attachments: Vec<Attachment>,
 }
 
 /// 代表作者信息
@@ -37,4 +39,17 @@ impl Author {
             (None, None) => self.full_name.clone().unwrap_or_default(),
         }
     }
+}
+
+/// 代表附件信息（PDF 等）
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Attachment {
+    /// 附件 URI
+    pub uri: String,
+    /// 附件标题（通常是文件名）
+    pub title: Option<String>,
+    /// 附件类型（如 application/pdf）
+    pub content_type: Option<String>,
+    /// 附件链接（如文件路径或 URL）
+    pub url: Option<String>,
 }

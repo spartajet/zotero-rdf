@@ -79,6 +79,18 @@ fn test_extract_items() {
             };
             println!("    摘要: {}", preview);
         }
+        if !item.attachments.is_empty() {
+            println!("    附件:");
+            for attachment in &item.attachments {
+                println!(
+                    "      - {}",
+                    attachment.title.as_deref().unwrap_or("(无标题)")
+                );
+                if let Some(content_type) = &attachment.content_type {
+                    println!("        类型: {}", content_type);
+                }
+            }
+        }
         println!();
     }
 
@@ -111,4 +123,41 @@ fn test_author_order() {
             println!("  [{}] {}", i + 1, author.display_name());
         }
     }
+}
+
+/// 测试 link:link 谓词解析
+#[test]
+fn test_link_predicate() {
+    let graph = parse_file(TEST_RDF_FILE).expect("Failed to parse file");
+
+    // 查找所有包含 "link" 的谓词
+    let mut link_predicates = std::collections::HashSet::new();
+    for triple in graph.iter() {
+        let pred = triple.predicate.as_str();
+        if pred.contains("link") {
+            link_predicates.insert(pred.to_string());
+        }
+    }
+
+    println!("\n=== 包含 'link' 的谓词 ===");
+    for pred in &link_predicates {
+        println!("  {}", pred);
+    }
+
+    // 打印期望的 LINK_LINK 值
+    println!("\n=== 期望的 LINK_LINK 值 ===");
+    println!("  http://purl.org/rss/1.0/modules/link/link");
+
+    // 查找 item_33 的所有 link:link 关联
+    println!("\n=== item_33 的 link:link 关联 ===");
+    let item_33_uri = oxrdf::NamedNode::new("http://zotero.org/export#item_33").unwrap();
+    let subject = oxrdf::Subject::from(item_33_uri);
+    for triple in graph.triples_for_subject(&subject) {
+        let pred = triple.predicate.as_str();
+        if pred == "http://purl.org/rss/1.0/modules/link/link" {
+            println!("  Object: {}", triple.object);
+        }
+    }
+
+    assert!(!link_predicates.is_empty(), "Should have link predicates");
 }

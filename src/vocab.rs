@@ -9,6 +9,7 @@ pub const NS_RDF: &str = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
 pub const NS_FOAF: &str = "http://xmlns.com/foaf/0.1/";
 pub const NS_BIBO: &str = "http://purl.org/ontology/bibo/";
 pub const NS_BIB: &str = "http://purl.org/net/biblio#";
+pub const NS_LINK: &str = "http://purl.org/rss/1.0/modules/link/";
 
 // --- 预构造的 NamedNode 常量 (用于高效查询) ---
 
@@ -17,6 +18,8 @@ pub const RDF_TYPE: Lazy<NamedNode> =
     Lazy::new(|| NamedNode::new_unchecked(format!("{}type", NS_RDF)));
 pub const RDF_SEQ: Lazy<NamedNode> =
     Lazy::new(|| NamedNode::new_unchecked(format!("{}Seq", NS_RDF)));
+pub const RDF_VALUE: Lazy<NamedNode> =
+    Lazy::new(|| NamedNode::new_unchecked(format!("{}value", NS_RDF)));
 
 // Zotero Specifics
 pub const Z_ITEM_TYPE: Lazy<NamedNode> =
@@ -57,6 +60,12 @@ pub const BIBO_DOI: Lazy<NamedNode> =
     Lazy::new(|| NamedNode::new_unchecked(format!("{}doi", NS_BIBO)));
 pub const BIBO_PAGES: Lazy<NamedNode> =
     Lazy::new(|| NamedNode::new_unchecked(format!("{}pages", NS_BIBO)));
+
+// Link (Attachments)
+pub const LINK_LINK: Lazy<NamedNode> =
+    Lazy::new(|| NamedNode::new_unchecked(format!("{}link", NS_LINK)));
+pub const LINK_TYPE: Lazy<NamedNode> =
+    Lazy::new(|| NamedNode::new_unchecked(format!("{}type", NS_LINK)));
 
 /// 检查谓词是否为 RDF 序数属性 (rdf:_1, rdf:_2, ...)
 /// 如果是，返回序号；否则返回 None

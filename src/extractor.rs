@@ -1,4 +1,4 @@
-use crate::model::{Author, ZoteroItem};
+use crate::model::{Attachment, Author, ZoteroItem};
 use crate::vocab;
 use oxrdf::{Graph, Subject, Term};
 use std::collections::HashSet;
@@ -13,7 +13,7 @@ impl<'a> Extractor<'a> {
         Self { graph }
     }
 
-    /// 从 Graph 中提取所有 Zotero 条目
+    /// 从 Graph 中提取所有 Zotero 条目（不包括 attachment）
     pub fn extract_all(&self) -> Vec<ZoteroItem> {
         let mut items = Vec::new();
         let mut processed_subjects: HashSet<Subject> = HashSet::new();
@@ -26,6 +26,13 @@ impl<'a> Extractor<'a> {
                     continue;
                 }
                 processed_subjects.insert(subject.clone());
+
+                // 获取 item_type 并跳过 attachment 类型
+                if let Some(item_type) = self.get_literal(&subject, &vocab::Z_ITEM_TYPE) {
+                    if item_type == "attachment" {
+                        continue; // 跳过 attachment，它们会作为主条目的字段处理
+                    }
+                }
 
                 if let Some(item) = self.extract_item(&subject) {
                     items.push(item);
@@ -52,6 +59,9 @@ impl<'a> Extractor<'a> {
         // 3. 复杂属性：作者 (关键点)
         let authors = self.extract_authors(subject);
 
+        // 4. 提取附件
+        let attachments = self.extract_attachments(subject);
+
         Some(ZoteroItem {
             uri,
             item_type,
@@ -60,6 +70,7 @@ impl<'a> Extractor<'a> {
             date,
             doi,
             abstract_note,
+            attachments,
         })
     }
 
@@ -97,6 +108,68 @@ impl<'a> Extractor<'a> {
         // 按索引排序
         indexed_authors.sort_by_key(|k| k.0);
         indexed_authors.into_iter().map(|(_, a)| a).collect()
+    }
+
+    /// 提取附件列表
+    fn extract_attachments(&self, subject: &Subject) -> Vec<Attachment> {
+        let mut attachments = Vec::new();
+
+        // 查找所有 link:link 关联的附件
+        for triple in self.graph.triples_for_subject(subject) {
+            if triple.predicate == vocab::LINK_LINK.as_ref() {
+                // 获取附件的 URI
+                if let oxrdf::TermRef::NamedNode(nn) = &triple.object {
+                    // 直接使用 NamedNode 创建 Subject
+                    let subject = Subject::from(nn.clone());
+                    if let Some(attachment) = self.extract_attachment_from_subject(&subject) {
+                        attachments.push(attachment);
+                    }
+                } else if let oxrdf::TermRef::BlankNode(bn) = &triple.object {
+                    // 附件可能是 BlankNode
+                    let subject = Subject::from(bn.clone());
+                    if let Some(attachment) = self.extract_attachment_from_subject(&subject) {
+                        attachments.push(attachment);
+                    }
+                }
+            }
+        }
+
+        attachments
+    }
+
+    /// 从 Subject 提取附件信息
+    fn extract_attachment_from_subject(&self, subject: &Subject) -> Option<Attachment> {
+        let uri = subject.to_string();
+        let title = self.get_literal(subject, &vocab::DC_TITLE);
+        let content_type = self.get_literal(subject, &vocab::LINK_TYPE);
+
+        // 从 dc:identifier 中提取 URL
+        let url = self.extract_attachment_url(subject);
+
+        Some(Attachment {
+            uri,
+            title,
+            content_type,
+            url,
+        })
+    }
+
+    /// 从 dc:identifier 中提取附件 URL
+    fn extract_attachment_url(&self, subject: &Subject) -> Option<String> {
+        // dc:identifier 可能包含 dcterms:URI 节点
+        if let Some(identifier_obj) = self.get_object(subject, &vocab::DC_IDENTIFIER) {
+            match &identifier_obj {
+                Term::BlankNode(bn) => {
+                    // 查找 dcterms:URI 节点中的 rdf:value
+                    let subject = Subject::from(bn.clone());
+                    self.get_literal(&subject, &vocab::RDF_VALUE)
+                }
+                Term::Literal(lit) => Some(lit.value().to_string()),
+                _ => None,
+            }
+        } else {
+            None
+        }
     }
 
     fn extract_person_from_term(&self, term: &Term) -> Option<Author> {
