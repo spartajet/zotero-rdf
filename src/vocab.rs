@@ -4,15 +4,19 @@ use oxrdf::NamedNode;
 // --- 命名空间基础 URI ---
 pub const NS_ZOTERO: &str = "http://www.zotero.org/namespaces/export#";
 pub const NS_DC: &str = "http://purl.org/dc/elements/1.1/";
+pub const NS_DCTERMS: &str = "http://purl.org/dc/terms/";
 pub const NS_RDF: &str = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
 pub const NS_FOAF: &str = "http://xmlns.com/foaf/0.1/";
 pub const NS_BIBO: &str = "http://purl.org/ontology/bibo/";
+pub const NS_BIB: &str = "http://purl.org/net/biblio#";
 
 // --- 预构造的 NamedNode 常量 (用于高效查询) ---
 
 // RDF
 pub const RDF_TYPE: Lazy<NamedNode> =
     Lazy::new(|| NamedNode::new_unchecked(format!("{}type", NS_RDF)));
+pub const RDF_SEQ: Lazy<NamedNode> =
+    Lazy::new(|| NamedNode::new_unchecked(format!("{}Seq", NS_RDF)));
 
 // Zotero Specifics
 pub const Z_ITEM_TYPE: Lazy<NamedNode> =
@@ -30,6 +34,16 @@ pub const DC_DATE: Lazy<NamedNode> =
 pub const DC_IDENTIFIER: Lazy<NamedNode> =
     Lazy::new(|| NamedNode::new_unchecked(format!("{}identifier", NS_DC)));
 
+// Dublin Core Terms
+pub const DCTERMS_ABSTRACT: Lazy<NamedNode> =
+    Lazy::new(|| NamedNode::new_unchecked(format!("{}abstract", NS_DCTERMS)));
+
+// BIB (Biblio)
+pub const BIB_AUTHORS: Lazy<NamedNode> =
+    Lazy::new(|| NamedNode::new_unchecked(format!("{}authors", NS_BIB)));
+pub const BIB_PAGES: Lazy<NamedNode> =
+    Lazy::new(|| NamedNode::new_unchecked(format!("{}pages", NS_BIB)));
+
 // FOAF (Author info)
 pub const FOAF_PERSON: Lazy<NamedNode> =
     Lazy::new(|| NamedNode::new_unchecked(format!("{}Person", NS_FOAF)));
@@ -43,3 +57,12 @@ pub const BIBO_DOI: Lazy<NamedNode> =
     Lazy::new(|| NamedNode::new_unchecked(format!("{}doi", NS_BIBO)));
 pub const BIBO_PAGES: Lazy<NamedNode> =
     Lazy::new(|| NamedNode::new_unchecked(format!("{}pages", NS_BIBO)));
+
+/// 检查谓词是否为 RDF 序数属性 (rdf:_1, rdf:_2, ...)
+/// 如果是，返回序号；否则返回 None
+pub fn parse_rdf_li_index(predicate: &str) -> Option<u32> {
+    let prefix = format!("{}_", NS_RDF);
+    predicate
+        .strip_prefix(&prefix)
+        .and_then(|idx_str| idx_str.parse::<u32>().ok())
+}
