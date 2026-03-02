@@ -1,0 +1,371 @@
+<rdf:RDF
+ xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+ xmlns:z="http://www.zotero.org/namespaces/export#"
+ xmlns:dcterms="http://purl.org/dc/terms/"
+ xmlns:dc="http://purl.org/dc/elements/1.1/"
+ xmlns:bib="http://purl.org/net/biblio#"
+ xmlns:foaf="http://xmlns.com/foaf/0.1/"
+ xmlns:vcard="http://nwalsh.com/rdf/vCard#"
+ xmlns:link="http://purl.org/rss/1.0/modules/link/"
+ xmlns:prism="http://prismstandard.org/namespaces/1.2/basic/">
+    <rdf:Description rdf:about="urn:isbn:978-3-319-00557-7">
+        <z:itemType>conferencePaper</z:itemType>
+        <dcterms:isPartOf>
+            <bib:Journal>
+                <dcterms:isPartOf>
+                    <bib:Series>
+                        <dc:title>Lecture Notes in Mechanical Engineering</dc:title>
+                    </bib:Series>
+                </dcterms:isPartOf>
+                <dc:identifier>DOI 10.1007/978-3-319-00557-7_20</dc:identifier>
+                <dc:identifier>ISBN 978-3-319-00557-7</dc:identifier>
+                <dc:title>Advances in Sustainable and Competitive Manufacturing Systems</dc:title>
+            </bib:Journal>
+        </dcterms:isPartOf>
+        <dc:publisher>
+            <foaf:Organization>
+                <foaf:name>Springer International Publishing</foaf:name>
+                <vcard:adr>
+                    <vcard:Address>
+                       <vcard:locality>Heidelberg</vcard:locality>
+                    </vcard:Address>
+                </vcard:adr>
+            </foaf:Organization>
+        </dc:publisher>
+        <bib:authors>
+            <rdf:Seq>
+                <rdf:li>
+                    <foaf:Person>
+                        <foaf:surname>Lima</foaf:surname>
+                        <foaf:givenName>Jose</foaf:givenName>
+                    </foaf:Person>
+                </rdf:li>
+                <rdf:li>
+                    <foaf:Person>
+                        <foaf:surname>Gonçalves</foaf:surname>
+                        <foaf:givenName>José</foaf:givenName>
+                    </foaf:Person>
+                </rdf:li>
+                <rdf:li>
+                    <foaf:Person>
+                        <foaf:surname>Costa</foaf:surname>
+                        <foaf:givenName>Paulo J.</foaf:givenName>
+                    </foaf:Person>
+                </rdf:li>
+                <rdf:li>
+                    <foaf:Person>
+                        <foaf:surname>Paulo Moreira</foaf:surname>
+                        <foaf:givenName>A.</foaf:givenName>
+                    </foaf:Person>
+                </rdf:li>
+            </rdf:Seq>
+        </bib:authors>
+        <bib:editors>
+            <rdf:Seq>
+                <rdf:li>
+                    <foaf:Person>
+                        <foaf:surname>Azevedo</foaf:surname>
+                        <foaf:givenName>Américo</foaf:givenName>
+                    </foaf:Person>
+                </rdf:li>
+            </rdf:Seq>
+        </bib:editors>
+        <link:link rdf:resource="#item_2469"/>
+        <dc:subject>
+           <z:AutomaticTag><rdf:value>/unread</rdf:value></z:AutomaticTag>
+        </dc:subject>
+        <dc:subject>
+           <z:AutomaticTag><rdf:value>Conveyer Belt</rdf:value></z:AutomaticTag>
+        </dc:subject>
+        <dc:subject>
+            <z:AutomaticTag>
+               <rdf:value>Finite Impulse Response Filter</rdf:value>
+            </z:AutomaticTag>
+        </dc:subject>
+        <dc:subject>
+           <z:AutomaticTag><rdf:value>Laser Scanner</rdf:value></z:AutomaticTag>
+        </dc:subject>
+        <dc:subject>
+           <z:AutomaticTag><rdf:value>Noise Spectrum</rdf:value></z:AutomaticTag>
+        </dc:subject>
+        <dc:subject>
+           <z:AutomaticTag><rdf:value>Real Robot</rdf:value></z:AutomaticTag>
+        </dc:subject>
+        <dc:title>Modeling and Simulation of a Laser Scanner Sensor: An Industrial Application Case Study</dc:title>
+        <dcterms:abstract>A laser scanner is a popular sensor widely used in industry and mobile robots applications that measures the distance to the sensor on a slice of the plan. At the same time, simulation has becoming more and more used in industries and academia since it presents several advantages. It takes the building and rebuilding phase out of the loop by using the model already created in the design phase. Further, simulation time on testing is cheaper and faster than performing the multiple tests of the design each time. Besides, it is easier to measure some variables in simulation than in real scenarios. In this paper, a laser scanner sensor is modeled and implemented in a developed simulator that already has several other sensors and actuators models. The presented simulation reflects the laser model properties such as target color dependences, noise, limits, time constraints, and target angle functions. As a case study, the same scenario is assembled with real components on a conveyer belt and in simulation. Results from both approaches are compared and validate the proposed model methodology. As an example, a 3D object recognition task is addressed highlighting the developed realistic model. Further industrial and R&amp;D implementations based on this sensor could be stressed in simulation before implementation.</dcterms:abstract>
+        <dc:date>2013</dc:date>
+        <dc:coverage>7 citation(s)</dc:coverage>
+        <z:shortTitle>Modeling and Simulation of a Laser Scanner Sensor</z:shortTitle>
+        <z:language>en</z:language>
+        <z:libraryCatalog>Springer Link</z:libraryCatalog>
+        <bib:pages>245-258</bib:pages>
+    </rdf:Description>
+    <z:Attachment rdf:about="#item_2469">
+        <z:itemType>attachment</z:itemType>
+        <rdf:resource rdf:resource="files/2469/Lima et al_2013_Modeling and Simulation of a Laser Scanner Sensor.pdf"/>
+        <dc:title>Lima et al_2013_Modeling and Simulation of a Laser Scanner Sensor.pdf</dc:title>
+        <dc:identifier>
+            <dcterms:URI>
+                <rdf:value>https://bibliotecadigital.ipb.pt/bitstream/10198/9869/3/abs%20laser.pdf</rdf:value>
+            </dcterms:URI>
+        </dc:identifier>
+        <dcterms:dateSubmitted>2022-04-24 12:44:05</dcterms:dateSubmitted>
+        <z:linkMode>1</z:linkMode>
+        <link:type>application/pdf</link:type>
+    </z:Attachment>
+    <bib:Article rdf:about="https://www.spiedigitallibrary.org/journals/optical-engineering/volume-57/issue-11/114107/Full-simulation-model-for-laser-triangulation-measurement-in-an-inhomogeneous/10.1117/1.OE.57.11.114107.full">
+        <z:itemType>journalArticle</z:itemType>
+        <dcterms:isPartOf rdf:resource="urn:issn:0091-3286,%201560-2303"/>
+        <bib:authors>
+            <rdf:Seq>
+                <rdf:li>
+                    <foaf:Person>
+                        <foaf:surname>Beermann</foaf:surname>
+                        <foaf:givenName>Rüdiger</foaf:givenName>
+                    </foaf:Person>
+                </rdf:li>
+                <rdf:li>
+                    <foaf:Person>
+                        <foaf:surname>Quentin</foaf:surname>
+                        <foaf:givenName>Lorenz</foaf:givenName>
+                    </foaf:Person>
+                </rdf:li>
+                <rdf:li>
+                    <foaf:Person>
+                        <foaf:surname>Stein</foaf:surname>
+                        <foaf:givenName>Gunnar</foaf:givenName>
+                    </foaf:Person>
+                </rdf:li>
+                <rdf:li>
+                    <foaf:Person>
+                        <foaf:surname>Reithmeier</foaf:surname>
+                        <foaf:givenName>Eduard</foaf:givenName>
+                    </foaf:Person>
+                </rdf:li>
+                <rdf:li>
+                    <foaf:Person>
+                        <foaf:surname>Kästner</foaf:surname>
+                        <foaf:givenName>Markus</foaf:givenName>
+                    </foaf:Person>
+                </rdf:li>
+            </rdf:Seq>
+        </bib:authors>
+        <link:link rdf:resource="#item_2474"/>
+        <link:link rdf:resource="#item_2476"/>
+        <dc:subject>
+           <z:AutomaticTag><rdf:value>/unread</rdf:value></z:AutomaticTag>
+        </dc:subject>
+        <dc:title>Full simulation model for laser triangulation measurement in an inhomogeneous refractive index field</dc:title>
+        <dcterms:abstract>The optical inspection of wrought hot workpieces between subsequent forming steps of a multistage process chain can yield diverse advantages. Deficient components can be detected in an early forming stage. Moreover, the eliminated cooling economizes heating energy. The present workpiece temperature can be exploited in the following chain steps. Challenges arise due to the heat input into the air surrounding the workpiece, as triangulation techniques rely on homogeneous optical conditions. The effect of an inhomogeneous refractive index field (RIF) in air on a 3-D geometry measurement by optical triangulation is modeled exemplary by a virtual measurement of a hot cylinder. To our knowledge, this is the first simulation approach that fully considers both light deflection from the illumination unit to object and from object to camera. Simulated measurement results in a homogeneous and an inhomogeneous RIF are compared. The presented approach predicts measurement deviations in inhomogeneous optical media and can help to design actuated or computer-assisted compensation routines in order to reduce deflection effects when measuring hot objects.</dcterms:abstract>
+        <dc:date>2018/11</dc:date>
+        <dc:identifier>
+            <dcterms:URI>
+                <rdf:value>https://www.spiedigitallibrary.org/journals/optical-engineering/volume-57/issue-11/114107/Full-simulation-model-for-laser-triangulation-measurement-in-an-inhomogeneous/10.1117/1.OE.57.11.114107.full</rdf:value>
+            </dcterms:URI>
+        </dc:identifier>
+        <dcterms:dateSubmitted>2022-04-24 12:19:27</dcterms:dateSubmitted>
+        <dc:coverage>11 citation(s)</dc:coverage>
+        <z:libraryCatalog>4</z:libraryCatalog>
+        <dc:subject>
+           <dcterms:LCC><rdf:value>1.084</rdf:value></dcterms:LCC>
+        </dc:subject>
+        <dc:description>Publisher: SPIE</dc:description>
+        <bib:pages>114107</bib:pages>
+    </bib:Article>
+    <bib:Journal rdf:about="urn:issn:0091-3286,%201560-2303">
+        <dc:identifier>DOI 10.1117/1.OE.57.11.114107</dc:identifier>
+        <prism:volume>57</prism:volume>
+        <dc:title>Optical Engineering</dc:title>
+        <dc:identifier>ISSN 0091-3286, 1560-2303</dc:identifier>
+        <prism:number>11</prism:number>
+        <dcterms:alternative>OE</dcterms:alternative>
+    </bib:Journal>
+    <z:Attachment rdf:about="#item_2474">
+        <z:itemType>attachment</z:itemType>
+        <rdf:resource rdf:resource="files/2474/Beermann et al_2018_Full simulation model for laser triangulation measurement in an inhomogeneous.pdf"/>
+        <dc:title>Beermann et al_2018_Full simulation model for laser triangulation measurement in an inhomogeneous.pdf</dc:title>
+        <dc:identifier>
+            <dcterms:URI>
+                <rdf:value>https://www.spiedigitallibrary.org/journals/optical-engineering/volume-57/issue-11/114107/Full-simulation-model-for-laser-triangulation-measurement-in-an-inhomogeneous/10.1117/1.OE.57.11.114107.pdf</rdf:value>
+            </dcterms:URI>
+        </dc:identifier>
+        <dcterms:dateSubmitted>2022-04-24 12:19:34</dcterms:dateSubmitted>
+        <z:linkMode>1</z:linkMode>
+        <link:type>application/pdf</link:type>
+    </z:Attachment>
+    <z:Attachment rdf:about="#item_2476">
+        <z:itemType>attachment</z:itemType>
+        <rdf:resource rdf:resource="files/2476/1.OE.57.11.114107.html"/>
+        <dc:title>Snapshot</dc:title>
+        <dc:identifier>
+            <dcterms:URI>
+                <rdf:value>https://www.spiedigitallibrary.org/journals/optical-engineering/volume-57/issue-11/114107/Full-simulation-model-for-laser-triangulation-measurement-in-an-inhomogeneous/10.1117/1.OE.57.11.114107.full?SSO=1</rdf:value>
+            </dcterms:URI>
+        </dc:identifier>
+        <dcterms:dateSubmitted>2022-04-24 12:20:02</dcterms:dateSubmitted>
+        <z:linkMode>1</z:linkMode>
+        <link:type>text/html</link:type>
+    </z:Attachment>
+    <bib:Article rdf:about="#item_910">
+        <z:itemType>journalArticle</z:itemType>
+        <dcterms:isPartOf>
+            <bib:Journal>
+                <prism:volume>5</prism:volume>
+                <dc:title>WSEAS Transactions on Electronics</dc:title>
+                <dcterms:alternative>WSEAS Transactions on Electronics</dcterms:alternative>
+            </bib:Journal>
+        </dcterms:isPartOf>
+        <bib:authors>
+            <rdf:Seq>
+                <rdf:li>
+                    <foaf:Person>
+                        <foaf:surname>Boehnke</foaf:surname>
+                        <foaf:givenName>Kay</foaf:givenName>
+                    </foaf:Person>
+                </rdf:li>
+            </rdf:Seq>
+        </bib:authors>
+        <link:link rdf:resource="#item_2475"/>
+        <link:link rdf:resource="#item_2477"/>
+        <dc:subject>
+           <z:AutomaticTag><rdf:value>/unread</rdf:value></z:AutomaticTag>
+        </dc:subject>
+        <dc:title>Fast object localization with real time 3D laser range sensor simulation</dc:title>
+        <dcterms:abstract>3D laser range sensors provide range data of objects in a scene. Most of the known approaches for object recognition and localization in range data try to extract features and determine the position of the object from this information. In opposite we create a virtual scene, make a virtual range image with a virtual 3D laser range sensor and compare the result with range data of the real 3D laser range sensor. This idea is integrated in a system for automated robotic bin picking. Our simulation process is combined with a hierarchical registration process using the iterative closest point algorithm and Progressive meshes to refine our simulation results.</dcterms:abstract>
+        <dc:date>2008-03-01</dc:date>
+        <z:libraryCatalog>ResearchGate</z:libraryCatalog>
+    </bib:Article>
+    <z:Attachment rdf:about="#item_2475">
+        <z:itemType>attachment</z:itemType>
+        <dc:title>Boehnke_2008_Fast object localization with real time 3D laser range sensor simulation.pdf</dc:title>
+        <dc:identifier>
+            <dcterms:URI>
+                <rdf:value>https://www.researchgate.net/profile/Kay_Boehnke/publication/228944367_Fast_object_localization_with_real_time_3D_laser_range_sensor_simulation/links/5dc80fafa6fdcc57503a60e6/Fast-object-localization-with-real-time-3D-laser-range-sensor-simulation.pdf</rdf:value>
+            </dcterms:URI>
+        </dc:identifier>
+        <dcterms:dateSubmitted>2022-04-24 12:17:48</dcterms:dateSubmitted>
+        <z:linkMode>1</z:linkMode>
+        <link:type>application/pdf</link:type>
+    </z:Attachment>
+    <z:Attachment rdf:about="#item_2477">
+        <z:itemType>attachment</z:itemType>
+        <dc:title>ResearchGate Link</dc:title>
+        <dc:identifier>
+            <dcterms:URI>
+                <rdf:value>https://www.researchgate.net/publication/228944367_Fast_object_localization_with_real_time_3D_laser_range_sensor_simulation</rdf:value>
+            </dcterms:URI>
+        </dc:identifier>
+        <dcterms:dateSubmitted>2022-04-24 12:17:48</dcterms:dateSubmitted>
+        <z:linkMode>3</z:linkMode>
+    </z:Attachment>
+    <bib:Article rdf:about="#item_911">
+        <z:itemType>journalArticle</z:itemType>
+        <dcterms:isPartOf>
+           <bib:Journal></bib:Journal>
+        </dcterms:isPartOf>
+        <bib:authors>
+            <rdf:Seq>
+                <rdf:li>
+                    <foaf:Person>
+                        <foaf:surname>Kihl</foaf:surname>
+                        <foaf:givenName>Hilma</foaf:givenName>
+                    </foaf:Person>
+                </rdf:li>
+                <rdf:li>
+                    <foaf:Person>
+                        <foaf:surname>Källberg</foaf:surname>
+                        <foaf:givenName>Simon</foaf:givenName>
+                    </foaf:Person>
+                </rdf:li>
+            </rdf:Seq>
+        </bib:authors>
+        <link:link rdf:resource="#item_2478"/>
+        <dc:subject>
+           <z:AutomaticTag><rdf:value>/unread</rdf:value></z:AutomaticTag>
+        </dc:subject>
+        <dc:title>Simulated Laser Triangulation with Focus on Subsurface Scattering</dc:title>
+        <z:language>en</z:language>
+        <z:libraryCatalog>Zotero</z:libraryCatalog>
+        <bib:pages>70</bib:pages>
+    </bib:Article>
+    <z:Attachment rdf:about="#item_2478">
+        <z:itemType>attachment</z:itemType>
+        <rdf:resource rdf:resource="files/2478/Kihl 和 Källberg - Simulated Laser Triangulation with Focus on Subsur.pdf"/>
+        <dc:title>Kihl 和 Källberg - Simulated Laser Triangulation with Focus on Subsur.pdf</dc:title>
+        <dc:identifier>
+            <dcterms:URI>
+                <rdf:value>https://www.diva-portal.org/smash/get/diva2:1582921/FULLTEXT01.pdf</rdf:value>
+            </dcterms:URI>
+        </dc:identifier>
+        <dcterms:dateSubmitted>2022-04-24 12:17:02</dcterms:dateSubmitted>
+        <z:linkMode>1</z:linkMode>
+        <link:type>application/pdf</link:type>
+    </z:Attachment>
+    <bib:Article rdf:about="http://www.ijsimm.com/Full_Papers/Fulltext2015/text14-2_250-264.pdf">
+        <z:itemType>journalArticle</z:itemType>
+        <dcterms:isPartOf rdf:resource="urn:issn:17264529"/>
+        <bib:authors>
+            <rdf:Seq>
+                <rdf:li>
+                    <foaf:Person>
+                        <foaf:surname>Cajal</foaf:surname>
+                        <foaf:givenName>C.</foaf:givenName>
+                    </foaf:Person>
+                </rdf:li>
+                <rdf:li>
+                    <foaf:Person>
+                        <foaf:surname>Santolaria</foaf:surname>
+                        <foaf:givenName>J.</foaf:givenName>
+                    </foaf:Person>
+                </rdf:li>
+                <rdf:li>
+                    <foaf:Person>
+                        <foaf:surname>Samper</foaf:surname>
+                        <foaf:givenName>D.</foaf:givenName>
+                    </foaf:Person>
+                </rdf:li>
+            </rdf:Seq>
+        </bib:authors>
+        <link:link rdf:resource="#item_2479"/>
+        <dc:subject>
+           <z:AutomaticTag><rdf:value>/unread</rdf:value></z:AutomaticTag>
+        </dc:subject>
+        <dc:title>Simulation of Laser Triangulation Sensors Scanning for Design and Evaluation Purposes</dc:title>
+        <dcterms:abstract>Nowadays, computerized dimensional inspection is included in most manufacturing processes. Industrial vision systems, laser triangulation sensors (LTS) in particular, are responsible for ensuring dimensional and geometrical tolerance compliance. Computer-aided design / computer-aided engineering (CAD/CAE) plays an important role in the manufacturing process. However, in the design and engineering of LTS, there is no equivalent computer-aided tool to provide assistance to the process definition. This paper presents a simulation environment to assist with this issue. Based on the CAD files of the parts, all the parameters of an LTS sensor and its scanning strategy can be simulated in a virtual Direct3D environment. This simulation provides a re-creation of the camera acquisition, allowing collision and occlusion detection and ensures complete and effective digitalization. Furthermore, the capability of the process of tolerance compliance evaluation can be verified. Once the effectiveness of the process is proven, the simulation can be employed for continuous performance improvement and the incorporation of new parts.</dcterms:abstract>
+        <dc:date>2015-6-15</dc:date>
+        <dc:identifier>
+            <dcterms:URI>
+                <rdf:value>http://www.ijsimm.com/Full_Papers/Fulltext2015/text14-2_250-264.pdf</rdf:value>
+            </dcterms:URI>
+        </dc:identifier>
+        <dcterms:dateSubmitted>2022-04-24 12:16:33</dcterms:dateSubmitted>
+        <dc:coverage>10 citation(s)</dc:coverage>
+        <z:language>en</z:language>
+        <z:libraryCatalog>3</z:libraryCatalog>
+        <dc:subject>
+           <dcterms:LCC><rdf:value>3.225</rdf:value></dcterms:LCC>
+        </dc:subject>
+        <bib:pages>250-264</bib:pages>
+    </bib:Article>
+    <bib:Journal rdf:about="urn:issn:17264529">
+        <dc:identifier>DOI 10.2507/IJSIMM14(2)6.296</dc:identifier>
+        <prism:volume>14</prism:volume>
+        <dc:title>International Journal of Simulation Modelling</dc:title>
+        <dc:identifier>ISSN 17264529</dc:identifier>
+        <prism:number>2</prism:number>
+        <dcterms:alternative>Int. j. simul. model.</dcterms:alternative>
+    </bib:Journal>
+    <z:Attachment rdf:about="#item_2479">
+        <z:itemType>attachment</z:itemType>
+        <rdf:resource rdf:resource="files/2479/Cajal 等。 - 2015 - Simulation of Laser Triangulation Sensors Scanning.pdf"/>
+        <dc:title>Cajal 等。 - 2015 - Simulation of Laser Triangulation Sensors Scanning.pdf</dc:title>
+        <dc:identifier>
+            <dcterms:URI>
+                <rdf:value>http://www.ijsimm.com/Full_Papers/Fulltext2015/text14-2_250-264.pdf</rdf:value>
+            </dcterms:URI>
+        </dc:identifier>
+        <dcterms:dateSubmitted>2022-04-24 12:16:26</dcterms:dateSubmitted>
+        <z:linkMode>1</z:linkMode>
+        <link:type>application/pdf</link:type>
+    </z:Attachment>
+</rdf:RDF>
