@@ -2,18 +2,36 @@
 name = "zotero-rdf"
 version = "0.1.0"
 edition = "2024"
+rust-version = "1.85"
+description = "A Rust library for parsing Zotero RDF/XML export files"
+documentation = "https://docs.rs/zotero-rdf"
+readme = "README.md"
+repository = "https://github.com/yourusername/zotero-rdf"
+license = "MIT"
+keywords = ["bibliography", "parser", "rdf", "xml", "zotero"]
+categories = ["encoding", "parser-implementations", "science"]
+include = ["CHANGELOG.md", "Cargo.toml", "LICENSE", "README.md", "src/**/*.rs"]
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
 
 [dependencies]
-# 核心数据结构
+# Lazy static initialization
+once_cell = "1.21"
+# Core RDF data structures
 oxrdf = "0.2"
 oxrdfxml = "0.1"
-# 工具库
-thiserror = "1.0"
-once_cell = "1.21"
+# Serialization support
 serde = { version = "1.0", features = ["derive"] }
-# 日志
+# Error handling
+thiserror = "1.0"
+# Structured logging
 tracing = "0.1"
 
 [dev-dependencies]
-# 测试依赖
+# Logging subscriber for tests
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+[features]
+default = []

@@ -1,26 +1,27 @@
-//! Zotero 数据模型
+//! Zotero data models
 //!
-//! 本模块定义了 Zotero 条目的数据结构，包括：
-//! - [`ZoteroItem`]：代表一个文献条目（期刊文章、书籍等）
-//! - [`Author`]：代表作者信息
-//! - [`Attachment`]：代表附件信息（PDF 等）
+//! This module defines the data structures for Zotero items:
+//! - [`ZoteroItem`]: Represents a bibliographic item (journal article, book, etc.)
+//! - [`Author`]: Represents author information
+//! - [`Attachment`]: Represents attachment information (PDFs, etc.)
 
 use serde::{Deserialize, Serialize};
 
-/// 代表一个 Zotero 条目（期刊文章、书籍等）
+/// Represents a Zotero item (journal article, book, etc.)
 ///
-/// `ZoteroItem` 是从 RDF 图中提取的结构化数据，包含了文献的主要元数据。
+/// `ZoteroItem` contains structured data extracted from the RDF graph,
+/// including the main metadata of a bibliographic item.
 ///
 /// # Fields
 ///
-/// * `uri` - 条目的唯一标识符（RDF 中的 Subject URI）
-/// * `item_type` - Zotero 条目类型（如 journalArticle, book, thesis）
-/// * `title` - 标题
-/// * `authors` - 作者列表，保持原始顺序
-/// * `date` - 出版日期
-/// * `doi` - DOI 标识符
-/// * `abstract_note` - 摘要
-/// * `attachments` - 附件列表（PDF 等）
+/// * `uri` - Unique identifier of the item (Subject URI in RDF)
+/// * `item_type` - Zotero item type (e.g., journalArticle, book, thesis)
+/// * `title` - Title
+/// * `authors` - List of authors, in original order
+/// * `date` - Publication date
+/// * `doi` - DOI identifier
+/// * `abstract_note` - Abstract
+/// * `attachments` - List of attachments (PDFs, etc.)
 ///
 /// # Example
 ///
@@ -46,55 +47,56 @@ use serde::{Deserialize, Serialize};
 /// ```
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ZoteroItem {
-    /// 条目 URI (主键)
+    /// Item URI (primary key)
     ///
-    /// 在 Zotero RDF 中，这是条目的唯一标识符，
-    /// 通常格式为 `http://zotero.org/export#item_XXX`
+    /// In Zotero RDF, this is the unique identifier of the item,
+    /// typically in the format `http://zotero.org/export#item_XXX`
     pub uri: String,
 
-    /// Zotero 条目类型
+    /// Zotero item type
     ///
-    /// 常见类型包括：
-    /// - `journalArticle` - 期刊文章
-    /// - `book` - 书籍
-    /// - `thesis` - 学位论文
-    /// - `conferencePaper` - 会议论文
-    /// - `report` - 报告
+    /// Common types include:
+    /// - `journalArticle` - Journal articles
+    /// - `book` - Books
+    /// - `thesis` - Theses and dissertations
+    /// - `conferencePaper` - Conference papers
+    /// - `report` - Reports
     pub item_type: String,
 
-    /// 标题
+    /// Title
     pub title: Option<String>,
 
-    /// 作者列表 (保持原有顺序)
+    /// List of authors (in original order)
     ///
-    /// 作者顺序与 Zotero 库中的顺序一致，
-    /// 通过解析 RDF 中的 `rdf:Seq` 结构实现。
+    /// Author order matches the order in the Zotero library,
+    /// achieved by parsing the `rdf:Seq` structure in the RDF.
     pub authors: Vec<Author>,
 
-    /// 出版日期
+    /// Publication date
     ///
-    /// 日期格式可能是年份（如 `2024`）或完整日期（如 `2024-01-15`）。
+    /// Date format may be a year (e.g., `2024`) or a full date (e.g., `2024-01-15`).
     pub date: Option<String>,
 
     /// DOI (Digital Object Identifier)
     ///
-    /// DOI 可能从 `bibo:doi` 谓词直接提取，
-    /// 或从条目 URI（如 `https://doi.org/10.xxx/yyy`）中解析。
+    /// The DOI may be extracted directly from the `bibo:doi` predicate,
+    /// or parsed from the item URI (e.g., `https://doi.org/10.xxx/yyy`).
     pub doi: Option<String>,
 
-    /// 摘要
+    /// Abstract
     pub abstract_note: Option<String>,
 
-    /// 附件列表 (PDF 等)
+    /// List of attachments (PDFs, etc.)
     ///
-    /// 附件通过 `link:link` 谓词与主条目关联。
-    /// 一个条目可能有多个附件（如 PDF、HTML 快照等）。
+    /// Attachments are linked to the main item via the `link:link` predicate.
+    /// An item may have multiple attachments (e.g., PDF, HTML snapshot).
     pub attachments: Vec<Attachment>,
 }
 
-/// 代表作者信息
+/// Represents author information
 ///
-/// 作者信息从 FOAF 本体中提取，包括姓（surname）和名（givenName）。
+/// Author information is extracted from the FOAF ontology,
+/// including surname and given name.
 ///
 /// # Example
 ///
@@ -111,28 +113,28 @@ pub struct ZoteroItem {
 /// ```
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Author {
-    /// 名（Given Name）
+    /// Given name (first name)
     ///
-    /// 从 `foaf:givenName` 提取。
+    /// Extracted from `foaf:givenName`.
     pub given_name: Option<String>,
 
-    /// 姓（Surname）
+    /// Surname (last name)
     ///
-    /// 从 `foaf:surname` 提取。
+    /// Extracted from `foaf:surname`.
     pub surname: Option<String>,
 
-    /// 全名
+    /// Full name
     ///
-    /// 某些情况下 Zotero 可能直接提供完整姓名。
+    /// In some cases, Zotero may provide the complete name directly.
     pub full_name: Option<String>,
 }
 
 impl Author {
-    /// 生成标准引用格式的姓名
+    /// Generates a name in standard citation format
     ///
-    /// 格式为 "姓, 名"（如 "Smith, Jane"）。
-    /// 如果只有姓或名，则只返回那一个。
-    /// 如果都没有，返回 `full_name` 或空字符串。
+    /// Format is "Surname, GivenName" (e.g., "Smith, Jane").
+    /// If only surname or given name exists, returns that one.
+    /// If neither exists, returns `full_name` or an empty string.
     ///
     /// # Example
     ///
@@ -140,12 +142,12 @@ impl Author {
     /// use zotero_rdf::Author;
     ///
     /// let author = Author {
-    ///     surname: Some("李".to_string()),
-    ///     given_name: Some("明".to_string()),
+    ///     surname: Some("Li".to_string()),
+    ///     given_name: Some("Ming".to_string()),
     ///     full_name: None,
     /// };
     ///
-    /// assert_eq!(author.display_name(), "李, 明");
+    /// assert_eq!(author.display_name(), "Li, Ming");
     /// ```
     pub fn display_name(&self) -> String {
         match (&self.surname, &self.given_name) {
@@ -157,13 +159,13 @@ impl Author {
     }
 }
 
-/// 代表附件信息（PDF 等）
+/// Represents attachment information (PDFs, etc.)
 ///
-/// 附件通过 `link:link` 谓词与主条目关联。
-/// 一个 Zotero 条目可能有多个附件，如：
-/// - PDF 全文
-/// - HTML 网页快照
-/// - 纯文本笔记
+/// Attachments are linked to the main item via the `link:link` predicate.
+/// A Zotero item may have multiple attachments, such as:
+/// - PDF full text
+/// - HTML webpage snapshot
+/// - Plain text notes
 ///
 /// # Example
 ///
@@ -181,29 +183,29 @@ impl Author {
 /// ```
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Attachment {
-    /// 附件 URI
+    /// Attachment URI
     ///
-    /// 在 RDF 中，这是附件节点的唯一标识符。
+    /// In RDF, this is the unique identifier of the attachment node.
     pub uri: String,
 
-    /// 附件标题（通常是文件名）
+    /// Attachment title (usually the filename)
     ///
-    /// 例如："Doe et al_2024_Research Paper.pdf"
+    /// Example: "Doe et al_2024_Research Paper.pdf"
     pub title: Option<String>,
 
-    /// 附件类型（MIME 类型）
+    /// Attachment type (MIME type)
     ///
-    /// 常见类型：
-    /// - `application/pdf` - PDF 文件
-    /// - `text/html` - HTML 网页
-    /// - `text/plain` - 纯文本
+    /// Common types:
+    /// - `application/pdf` - PDF files
+    /// - `text/html` - HTML webpages
+    /// - `text/plain` - Plain text
     pub content_type: Option<String>,
 
-    /// 附件链接（文件路径或 URL）
+    /// Attachment link (file path or URL)
     ///
-    /// 可能是：
-    /// - 相对文件路径（如 `files/paper.pdf`）
-    /// - 绝对文件路径
+    /// May be:
+    /// - Relative file path (e.g., `files/paper.pdf`)
+    /// - Absolute file path
     /// - HTTP URL
     pub url: Option<String>,
 }

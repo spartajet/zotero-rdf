@@ -4,13 +4,13 @@ use oxrdf::{Graph, Subject, Term};
 use std::collections::HashSet;
 use tracing::{debug, info, instrument, trace, warn};
 
-/// RDF 图提取器，用于将原始 RDF 数据转换为结构化的 ZoteroItem
+/// RDF graph extractor for converting raw RDF data into structured `ZoteroItem` instances
 ///
-/// `Extractor` 从解析后的 RDF 图中提取 Zotero 条目，包括：
-/// - 条目类型（journalArticle, book, thesis 等）
-/// - 标题、日期、DOI、摘要
-/// - 作者列表（保持原始顺序）
-/// - 附件（PDF 等）
+/// `Extractor` retrieves Zotero items from a parsed RDF graph, including:
+/// - Item types (journalArticle, book, thesis, etc.)
+/// - Titles, dates, DOIs, abstracts
+/// - Author lists (in original order)
+/// - Attachments (PDFs, etc.)
 ///
 /// # Example
 ///
@@ -32,23 +32,24 @@ pub struct Extractor<'a> {
 }
 
 impl<'a> Extractor<'a> {
-    /// 创建新的提取器
+    /// Creates a new extractor
     ///
     /// # Arguments
     ///
-    /// * `graph` - 解析后的 RDF 图的引用
+    /// * `graph` - Reference to the parsed RDF graph
     pub fn new(graph: &'a Graph) -> Self {
         Self { graph }
     }
 
-    /// 从 Graph 中提取所有 Zotero 条目（不包括 attachment）
+    /// Extracts all Zotero items from the graph (excluding attachments)
     ///
-    /// 遍历图中所有包含 `z:itemType` 谓词的节点，将其转换为 `ZoteroItem`。
-    /// 附件类型（`z:itemType="attachment"`）会被跳过，它们会作为主条目的字段处理。
+    /// Iterates through all nodes in the graph that contain the `z:itemType` predicate
+    /// and converts them to `ZoteroItem`. Attachment items (`z:itemType="attachment"`)
+    /// are skipped, as they are handled as fields of parent items.
     ///
     /// # Returns
     ///
-    /// 返回 `Vec<ZoteroItem>`，包含所有提取的条目。
+    /// Returns `Vec<ZoteroItem>` containing all extracted items.
     ///
     /// # Example
     ///
@@ -64,7 +65,7 @@ impl<'a> Extractor<'a> {
     /// ```
     #[instrument(skip(self), fields(graph_len = %self.graph.len()))]
     pub fn extract_all(&self) -> Vec<ZoteroItem> {
-        info!("开始提取 Zotero 条目");
+        info!("Starting Zotero item extraction");
         let mut items = Vec::new();
         let mut processed_subjects: HashSet<Subject> = HashSet::new();
         let mut attachment_count = 0;
@@ -72,19 +73,19 @@ impl<'a> Extractor<'a> {
         for triple in self.graph.iter() {
             if triple.predicate == *vocab::Z_ITEM_TYPE {
                 let subject: Subject = triple.subject.into();
-                // 确保不重复处理同一个 Subject
+                // Ensure we don't process the same Subject twice
                 if processed_subjects.contains(&subject) {
                     continue;
                 }
                 processed_subjects.insert(subject.clone());
 
-                // 获取 item_type 并跳过 attachment 类型
+                // Get item_type and skip attachment types
                 if let Some(item_type) = self.get_literal(&subject, &vocab::Z_ITEM_TYPE)
                     && item_type == "attachment"
                 {
                     attachment_count += 1;
-                    trace!("跳过 attachment 类型条目: {}", subject);
-                    continue; // 跳过 attachment，它们会作为主条目的字段处理
+                    trace!("Skipping attachment item: {}", subject);
+                    continue; // Attachments are handled as fields of parent items
                 }
 
                 if let Some(item) = self.extract_item(&subject) {
@@ -94,7 +95,7 @@ impl<'a> Extractor<'a> {
         }
 
         info!(
-            "提取完成: {} 个条目, 跳过 {} 个附件",
+            "Extraction complete: {} items, skipped {} attachments",
             items.len(),
             attachment_count
         );
@@ -103,30 +104,30 @@ impl<'a> Extractor<'a> {
 
     #[instrument(skip(self), fields(uri = %subject))]
     fn extract_item(&self, subject: &Subject) -> Option<ZoteroItem> {
-        // 1. 基础信息
+        // 1. Basic information
         let uri = subject.to_string();
         let item_type = self.get_literal(subject, &vocab::Z_ITEM_TYPE)?;
 
-        debug!("提取条目: type={}, uri={}", item_type, uri);
+        debug!("Extracting item: type={}, uri={}", item_type, uri);
 
-        // 2. 简单属性提取
+        // 2. Simple property extraction
         let title = self.get_literal(subject, &vocab::DC_TITLE);
         let date = self.get_literal(subject, &vocab::DC_DATE);
         let abstract_note = self.get_literal(subject, &vocab::DCTERMS_ABSTRACT);
 
-        // DOI 提取：优先从 bibo:doi 获取，否则从 URI 中提取
+        // DOI extraction: prioritize bibo:doi, otherwise extract from URI
         let doi = self
             .get_literal(subject, &vocab::BIBO_DOI)
             .or_else(|| extract_doi_from_uri(&uri));
 
-        // 3. 复杂属性：作者 (关键点)
+        // 3. Complex properties: authors (key point)
         let authors = self.extract_authors(subject);
 
-        // 4. 提取附件
+        // 4. Extract attachments
         let attachments = self.extract_attachments(subject);
 
         if !attachments.is_empty() {
-            debug!("条目包含 {} 个附件", attachments.len());
+            debug!("Item has {} attachments", attachments.len());
         }
 
         Some(ZoteroItem {
@@ -141,77 +142,77 @@ impl<'a> Extractor<'a> {
         })
     }
 
-    /// 提取并排序作者
+    /// Extracts and sorts authors
     #[instrument(skip(self), fields(uri = %subject))]
     fn extract_authors(&self, subject: &Subject) -> Vec<Author> {
         let mut indexed_authors: Vec<(u32, Author)> = Vec::new();
 
-        // A. 查找 bib:authors 的目标 (Zotero 使用 bib:authors 而非 dc:creator)
+        // A. Find the target of bib:authors (Zotero uses bib:authors, not dc:creator)
         if let Some(creator_obj) = self.get_object(subject, &vocab::BIB_AUTHORS) {
-            // Zotero 结构: Item -> bib:authors -> rdf:Seq
-            // 检查目标是否是一个 Seq 容器
+            // Zotero structure: Item -> bib:authors -> rdf:Seq
+            // Check if the target is a Seq container
             if self.is_rdf_seq(&creator_obj) {
-                trace!("作者列表使用 rdf:Seq 结构");
-                // B. 解析 Seq 容器中的有序元素 (rdf:_1, rdf:_2 ...)
-                // 需要从 Term 中提取 Subject
+                trace!("Author list uses rdf:Seq structure");
+                // B. Parse ordered elements in Seq container (rdf:_1, rdf:_2, ...)
+                // Need to extract Subject from Term
                 if let Some(seq_subject) = term_to_subject(&creator_obj) {
                     for triple in self.graph.triples_for_subject(&seq_subject) {
                         let pred_str = triple.predicate.as_str();
-                        // 检查是否是 rdf:_n 格式
+                        // Check if it's rdf:_n format
                         if let Some(index) = vocab::parse_rdf_li_index(pred_str) {
                             let person_term: Term = triple.object.into();
                             if let Some(author) = self.extract_person_from_term(&person_term) {
-                                trace!("提取作者 [{}]: {}", index, author.display_name());
+                                trace!("Extracted author [{}]: {}", index, author.display_name());
                                 indexed_authors.push((index, author));
                             }
                         }
                     }
                 }
             } else {
-                // 兼容处理：如果只有一个作者，可能没有 Seq 包裹，直接是 Person 节点
-                trace!("作者列表使用简单结构（无 rdf:Seq）");
+                // Compatibility: if there's only one author, it might not be wrapped in Seq
+                trace!("Author list uses simple structure (no rdf:Seq)");
                 if let Some(author) = self.extract_person_from_term(&creator_obj) {
                     indexed_authors.push((1, author));
                 }
             }
         } else {
-            trace!("未找到作者信息");
+            trace!("No author information found");
         }
 
-        // 按索引排序
+        // Sort by index
         indexed_authors.sort_by_key(|k| k.0);
         let authors: Vec<Author> = indexed_authors.into_iter().map(|(_, a)| a).collect();
 
         if !authors.is_empty() {
-            debug!("提取了 {} 位作者", authors.len());
+            debug!("Extracted {} authors", authors.len());
         }
 
         authors
     }
 
-    /// 提取附件列表
+    /// Extracts attachment list
     #[instrument(skip(self), fields(uri = %subject))]
     fn extract_attachments(&self, subject: &Subject) -> Vec<Attachment> {
         let mut attachments = Vec::new();
 
-        // 查找所有 link:link 关联的附件
+        // Find all attachments linked via link:link
         for triple in self.graph.triples_for_subject(subject) {
             if triple.predicate == vocab::LINK_LINK.as_ref() {
-                // 获取附件的 URI
+                // Get the attachment's URI
                 if let oxrdf::TermRef::NamedNode(nn) = &triple.object {
-                    // 直接使用 NamedNode 创建 Subject
+                    // Directly use NamedNode to create Subject
                     let attachment_subject = Subject::from(*nn);
                     if let Some(attachment) =
                         self.extract_attachment_from_subject(&attachment_subject)
                     {
                         trace!(
-                            "提取附件: {}",
-                            attachment.title.as_deref().unwrap_or("(无标题)")
+                            "Extracted attachment: {}",
+                            attachment.title.as_deref().unwrap_or("(untitled)")
                         );
                         attachments.push(attachment);
                     }
                 } else if let oxrdf::TermRef::BlankNode(bn) = &triple.object {
-                    // 附件可能是 BlankNode
+                    // Attachment might be a BlankNode
                     let attachment_subject = Subject::from(*bn);
                     if let Some(attachment) =
                         self.extract_attachment_from_subject(&attachment_subject)
@@ -225,13 +226,13 @@ impl<'a> Extractor<'a> {
         attachments
     }
 
-    /// 从 Subject 提取附件信息
+    /// Extracts attachment information from a Subject
     fn extract_attachment_from_subject(&self, subject: &Subject) -> Option<Attachment> {
         let uri = subject.to_string();
         let title = self.get_literal(subject, &vocab::DC_TITLE);
         let content_type = self.get_literal(subject, &vocab::LINK_TYPE);
 
-        // 从 dc:identifier 中提取 URL
+        // Extract URL from dc:identifier
         let url = self.extract_attachment_url(subject);
 
         Some(Attachment {
@@ -242,13 +243,13 @@ impl<'a> Extractor<'a> {
         })
     }
 
-    /// 从 dc:identifier 中提取附件 URL
+    /// Extracts attachment URL from dc:identifier
     fn extract_attachment_url(&self, subject: &Subject) -> Option<String> {
-        // dc:identifier 可能包含 dcterms:URI 节点
+        // dc:identifier may contain a dcterms:URI node
         if let Some(identifier_obj) = self.get_object(subject, &vocab::DC_IDENTIFIER) {
             match &identifier_obj {
                 Term::BlankNode(bn) => {
-                    // 查找 dcterms:URI 节点中的 rdf:value
+                    // Find rdf:value in dcterms:URI node
                     let subject = Subject::from(bn.clone());
                     self.get_literal(&subject, &vocab::RDF_VALUE)
                 }
@@ -269,9 +270,9 @@ impl<'a> Extractor<'a> {
         let surname = self.get_literal(subject, &vocab::FOAF_SURNAME);
         let given = self.get_literal(subject, &vocab::FOAF_GIVENNAME);
 
-        // 至少需要一个字段才算有效作者
+        // At least one field is required for a valid author
         if surname.is_none() && given.is_none() {
-            warn!("作者节点缺少姓名信息: {}", subject);
+            warn!("Author node missing name information: {}", subject);
             return None;
         }
 
@@ -282,14 +283,14 @@ impl<'a> Extractor<'a> {
         })
     }
 
-    /// 获取对象 term
+    /// Gets object term
     fn get_object(&self, subject: &Subject, predicate: &oxrdf::NamedNode) -> Option<Term> {
         self.graph
             .object_for_subject_predicate(subject, predicate)
             .map(|t| t.into_owned())
     }
 
-    /// 获取字面量值
+    /// Gets literal value
     fn get_literal(&self, subject: &Subject, predicate: &oxrdf::NamedNode) -> Option<String> {
         self.get_object(subject, predicate).and_then(|obj| {
             if let Term::Literal(lit) = obj {
@@ -300,7 +301,7 @@ impl<'a> Extractor<'a> {
         })
     }
 
-    /// 检查 term 是否为 rdf:Seq 类型
+    /// Checks if a term is of rdf:Seq type
     fn is_rdf_seq(&self, term: &Term) -> bool {
         match term {
             Term::BlankNode(bn) => self
@@ -313,7 +314,7 @@ impl<'a> Extractor<'a> {
     }
 }
 
-/// 从 Term 中提取 Subject（仅支持 BlankNode 和 NamedNode）
+/// Extracts Subject from Term (only supports BlankNode and NamedNode)
 fn term_to_subject(term: &Term) -> Option<Subject> {
     match term {
         Term::BlankNode(bn) => Some(Subject::from(bn.clone())),
@@ -322,15 +323,16 @@ fn term_to_subject(term: &Term) -> Option<Subject> {
     }
 }
 
-/// 从 URI 中提取 DOI
-/// 支持格式：
+/// Extracts DOI from URI
+///
+/// Supported formats:
 /// - https://doi.org/10.xxx/yyy
 /// - http://dx.doi.org/10.xxx/yyy
 fn extract_doi_from_uri(uri: &str) -> Option<String> {
-    // 移除 RDF 的尖括号
+    // Remove RDF angle brackets
     let uri = uri.trim_start_matches('<').trim_end_matches('>');
 
-    // 尝试从 doi.org URI 中提取
+    // Try to extract from doi.org URI
     if let Some(rest) = uri.strip_prefix("https://doi.org/") {
         return Some(rest.to_string());
     }

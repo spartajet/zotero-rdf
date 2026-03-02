@@ -6,21 +6,21 @@ use std::io::{BufReader, Read};
 use std::path::Path;
 use tracing::{debug, info, instrument, warn};
 
-/// 默认的 base IRI，用于解析 Zotero 导出文件中的相对 IRI
+/// Default base IRI for resolving relative IRIs in Zotero export files
 ///
-/// Zotero 导出的 RDF 文件通常使用相对 URI（如 `#item_123`），
-/// 此 base IRI 会被用于解析这些相对引用。
+/// Zotero RDF exports typically use relative URIs (e.g., `#item_123`).
+/// This base IRI is used to resolve these relative references.
 pub const DEFAULT_BASE_IRI: &str = "http://zotero.org/export#";
 
-/// 从文件路径解析 Zotero RDF 文件到内存图
+/// Parses a Zotero RDF file from a file path into an in-memory graph
 ///
 /// # Arguments
 ///
-/// * `path` - RDF 文件的路径，可以是相对路径或绝对路径
+/// * `path` - Path to the RDF file, can be relative or absolute
 ///
 /// # Returns
 ///
-/// 成功时返回 `oxrdf::Graph`，失败时返回 `ZoteroRdfError`
+/// Returns `oxrdf::Graph` on success, `ZoteroRdfError` on failure
 ///
 /// # Example
 ///
@@ -34,21 +34,21 @@ pub const DEFAULT_BASE_IRI: &str = "http://zotero.org/export#";
 ///
 /// # Errors
 ///
-/// 可能返回以下错误：
-/// - `ZoteroRdfError::Io` - 文件不存在或无法读取
-/// - `ZoteroRdfError::ParseError` - RDF/XML 格式错误
-/// - `ZoteroRdfError::InvalidUri` - 文件中的 URI 格式无效
+/// This function may return the following errors:
+/// - `ZoteroRdfError::Io` - File does not exist or cannot be read
+/// - `ZoteroRdfError::ParseError` - RDF/XML format error
+/// - `ZoteroRdfError::InvalidUri` - Invalid URI format in the file
 #[instrument(skip(path), fields(path = %path.as_ref().display()))]
 pub fn parse_file<P: AsRef<Path>>(path: P) -> Result<Graph, ZoteroRdfError> {
     parse_file_with_options(path, ParseOptions::default())
 }
 
-/// 从文件路径解析 Zotero RDF 文件，使用指定的 base IRI
+/// Parses a Zotero RDF file from a file path with a specified base IRI
 ///
 /// # Arguments
 ///
-/// * `path` - RDF 文件的路径
-/// * `base_iri` - 用于解析相对 URI 的 base IRI
+/// * `path` - Path to the RDF file
+/// * `base_iri` - Base IRI for resolving relative URIs
 ///
 /// # Example
 ///
@@ -66,19 +66,19 @@ pub fn parse_file_with_base<P: AsRef<Path>>(
     parse_file_with_options_and_base(path, base_iri, ParseOptions::default())
 }
 
-/// 使用自定义选项解析文件
+/// Parses a file with custom options
 ///
 /// # Arguments
 ///
-/// * `path` - RDF 文件的路径
-/// * `options` - 解析选项
+/// * `path` - Path to the RDF file
+/// * `options` - Parse options
 ///
 /// # Example
 ///
 /// ```rust,no_run
 /// use zotero_rdf::{parse_file_with_options, ParseOptions};
 ///
-/// let options = ParseOptions::lenient(); // 宽松模式
+/// let options = ParseOptions::lenient(); // Lenient mode
 /// let graph = parse_file_with_options("my_library.rdf", options)?;
 /// # Ok::<(), zotero_rdf::ZoteroRdfError>(())
 /// ```
@@ -92,7 +92,7 @@ pub fn parse_file_with_options<P: AsRef<Path>>(
     parse_reader_with_options(reader, DEFAULT_BASE_IRI, options)
 }
 
-/// 使用自定义选项和 base IRI 解析文件
+/// Parses a file with custom options and base IRI
 #[instrument(skip(path), fields(path = %path.as_ref().display(), base_iri = %base_iri))]
 pub fn parse_file_with_options_and_base<P: AsRef<Path>>(
     path: P,
@@ -104,14 +104,14 @@ pub fn parse_file_with_options_and_base<P: AsRef<Path>>(
     parse_reader_with_options(reader, base_iri, options)
 }
 
-/// 从任意 Reader 解析 RDF (核心逻辑)
+/// Parses RDF from any Reader (core logic)
 ///
-/// 使用默认的 base IRI (`http://zotero.org/export#`)
+/// Uses the default base IRI (`http://zotero.org/export#`)
 pub fn parse_reader<R: Read>(reader: R) -> Result<Graph, ZoteroRdfError> {
     parse_reader_with_options(reader, DEFAULT_BASE_IRI, ParseOptions::default())
 }
 
-/// 从任意 Reader 解析 RDF，使用指定的 base IRI
+/// Parses RDF from any Reader with a specified base IRI
 pub fn parse_reader_with_base<R: Read>(
     reader: R,
     base_iri: &str,
@@ -119,7 +119,7 @@ pub fn parse_reader_with_base<R: Read>(
     parse_reader_with_options(reader, base_iri, ParseOptions::default())
 }
 
-/// 使用自定义选项从 Reader 解析 RDF
+/// Parses RDF from a Reader with custom options
 #[instrument(skip(reader), fields(base_iri = %base_iri))]
 pub fn parse_reader_with_options<R: Read>(
     reader: R,
@@ -128,12 +128,12 @@ pub fn parse_reader_with_options<R: Read>(
 ) -> Result<Graph, ZoteroRdfError> {
     let mut graph = Graph::default();
 
-    // 使用 oxrdfxml 解析器，设置 base IRI 以解析相对 IRI
+    // Use oxrdfxml parser with base IRI for resolving relative IRIs
     let parser = RdfXmlParser::new()
         .with_base_iri(base_iri)
         .map_err(|e| ZoteroRdfError::InvalidUri { uri: e.to_string() })?;
 
-    // for_reader 返回 Triple 迭代器
+    // for_reader returns a Triple iterator
     let mut stats = ParseStats::default();
 
     for triple_result in parser.for_reader(reader) {
@@ -144,11 +144,11 @@ pub fn parse_reader_with_options<R: Read>(
             }
             Err(e) => {
                 stats.error_count += 1;
-                warn!("解析三元组失败: {}", e);
+                warn!("Failed to parse triple: {}", e);
 
                 if !options.continue_on_error || stats.error_count >= options.max_errors {
                     return Err(ZoteroRdfError::parse_error(format!(
-                        "解析错误过多 ({}), 停止解析。最后错误: {}",
+                        "Too many parse errors ({}), stopping. Last error: {}",
                         stats.error_count, e
                     )));
                 }
@@ -157,19 +157,19 @@ pub fn parse_reader_with_options<R: Read>(
     }
 
     info!(
-        "RDF 解析完成: {} 个三元组, {} 个错误",
+        "RDF parsing complete: {} triples, {} errors",
         stats.triples_count, stats.error_count
     );
-    debug!("Graph 包含 {} 个三元组", graph.len());
+    debug!("Graph contains {} triples", graph.len());
 
     Ok(graph)
 }
 
-/// 解析文件并返回详细统计信息
+/// Parses a file and returns detailed statistics
 ///
 /// # Returns
 ///
-/// 返回元组 `(Graph, ParseStats)`，包含解析结果和统计信息
+/// Returns a tuple `(Graph, ParseStats)` containing the parse result and statistics
 ///
 /// # Example
 ///
@@ -190,7 +190,7 @@ pub fn parse_file_with_stats<P: AsRef<Path>>(
     parse_reader_with_stats(reader, DEFAULT_BASE_IRI)
 }
 
-/// 从 Reader 解析并返回详细统计信息
+/// Parses from a Reader and returns detailed statistics
 #[instrument(skip(reader), fields(base_iri = %base_iri))]
 pub fn parse_reader_with_stats<R: Read>(
     reader: R,
@@ -211,11 +211,11 @@ pub fn parse_reader_with_stats<R: Read>(
             }
             Err(e) => {
                 stats.error_count += 1;
-                warn!("解析三元组失败: {}", e);
+                warn!("Failed to parse triple: {}", e);
 
                 if stats.error_count >= 100 {
                     return Err(ZoteroRdfError::parse_error(format!(
-                        "解析错误过多 ({}), 停止解析",
+                        "Too many parse errors ({}), stopping",
                         stats.error_count
                     )));
                 }
@@ -224,7 +224,7 @@ pub fn parse_reader_with_stats<R: Read>(
     }
 
     info!(
-        "RDF 解析完成: {} 个三元组, {} 个错误",
+        "RDF parsing complete: {} triples, {} errors",
         stats.triples_count, stats.error_count
     );
 

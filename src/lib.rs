@@ -1,27 +1,58 @@
 //! # zotero-rdf
 //!
-//! 一个专注于解析 Zotero 导出 RDF/XML 文件的 Rust 库。
+//! A Rust library for parsing Zotero RDF/XML export files.
 //!
-//! ## 日志功能
+//! ## Overview
 //!
-//! 本库使用 `tracing` 进行日志记录。要查看日志，需要在应用中初始化 tracing subscriber：
+//! This library provides a simple and efficient way to parse Zotero library exports
+//! in RDF/XML format. It extracts structured bibliographic data including authors,
+//! DOIs, abstracts, and attachments.
+//!
+//! ## Quick Start
+//!
+//! ```rust,no_run
+//! use zotero_rdf::{parse_file, Extractor};
+//!
+//! // Parse a Zotero RDF export file
+//! let graph = parse_file("my_library.rdf")?;
+//!
+//! // Extract structured items
+//! let extractor = Extractor::new(&graph);
+//! let items = extractor.extract_all();
+//!
+//! for item in items {
+//!     println!("Title: {:?}", item.title);
+//!     println!("Authors: {}", item.authors.iter()
+//!         .map(|a| a.display_name())
+//!         .collect::<Vec<_>>()
+//!         .join(", "));
+//! }
+//! # Ok::<(), zotero_rdf::ZoteroRdfError>(())
+//! ```
+//!
+//! ## Logging
+//!
+//! The library uses `tracing` for structured logging. To see what's happening during parsing:
 //!
 //! ```rust,ignore
 //! use tracing_subscriber;
 //!
-//! // 初始化日志（默认 info 级别）
+//! // Initialize logging (default: info level)
 //! tracing_subscriber::fmt()
-//!     .with_env_filter(tracing_subscriber::EnvFilter::from_default_env()
-//!         .unwrap_or_else(|_| tracing_subscriber::EnvFilter::new("info")))
+//!     .with_env_filter(
+//!         tracing_subscriber::EnvFilter::from_default_env()
+//!             .unwrap_or_else(|_| tracing_subscriber::EnvFilter::new("info"))
+//!     )
 //!     .init();
 //!
-//! // 或者通过环境变量控制：RUST_LOG=debug cargo run
+//! // Set RUST_LOG=debug for more verbose output
 //! ```
 //!
-//! 日志级别说明：
-//! - `INFO`: 关键操作（文件解析、条目提取、完成统计）
-//! - `DEBUG`: 详细信息（每个条目的提取、附件数量）
-//! - `TRACE`: 最详细信息（每个作者、每个附件的提取）
+//! ### Log Levels
+//!
+//! - `INFO`: Key operations (file parsing, item extraction, completion stats)
+//! - `DEBUG`: Detailed info (each item extracted, attachment counts)
+//! - `TRACE`: Most verbose (each author, each attachment extraction)
 
 mod error;
 mod extractor;
@@ -29,7 +60,7 @@ mod model;
 mod parser;
 mod vocab;
 
-// --- 导出公共 API ---
+// --- Public API exports ---
 pub use error::{ErrorLocation, ParseOptions, ParseStats, ZoteroRdfError};
 pub use extractor::Extractor;
 pub use model::{Attachment, Author, ZoteroItem};
@@ -38,4 +69,4 @@ pub use parser::{
     DEFAULT_BASE_IRI, parse_file, parse_file_with_base, parse_file_with_options,
     parse_file_with_options_and_base, parse_file_with_stats, parse_reader, parse_reader_with_base,
     parse_reader_with_options, parse_reader_with_stats,
-}; // 重导出 Graph，方便用户使用
+};

@@ -1,7 +1,7 @@
 use once_cell::sync::Lazy;
 use oxrdf::NamedNode;
 
-// --- 命名空间基础 URI ---
+// --- Namespace base URIs ---
 pub const NS_ZOTERO: &str = "http://www.zotero.org/namespaces/export#";
 pub const NS_DC: &str = "http://purl.org/dc/elements/1.1/";
 pub const NS_DCTERMS: &str = "http://purl.org/dc/terms/";
@@ -11,8 +11,8 @@ pub const NS_BIBO: &str = "http://purl.org/ontology/bibo/";
 pub const NS_BIB: &str = "http://purl.org/net/biblio#";
 pub const NS_LINK: &str = "http://purl.org/rss/1.0/modules/link/";
 
-// --- 预构造的 NamedNode 静态变量 (用于高效查询) ---
-// 使用 static 而非 const，因为 Lazy<T> 具有内部可变性
+// --- Pre-constructed NamedNode static variables (for efficient queries) ---
+// Using static instead of const because Lazy<T> has interior mutability
 
 // RDF
 pub static RDF_TYPE: Lazy<NamedNode> =
@@ -58,8 +58,9 @@ pub static LINK_LINK: Lazy<NamedNode> =
 pub static LINK_TYPE: Lazy<NamedNode> =
     Lazy::new(|| NamedNode::new_unchecked(format!("{}type", NS_LINK)));
 
-/// 检查谓词是否为 RDF 序数属性 (rdf:_1, rdf:_2, ...)
-/// 如果是，返回序号；否则返回 None
+/// Checks if a predicate is an RDF ordinal property (rdf:_1, rdf:_2, ...)
+///
+/// Returns the index if it is, otherwise returns None
 pub fn parse_rdf_li_index(predicate: &str) -> Option<u32> {
     let prefix = format!("{}_", NS_RDF);
     predicate
