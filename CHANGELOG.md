@@ -33,5 +33,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Performance benchmarks
 - Encoding tests for CJK characters
 
-[Unreleased]: https://github.com/yourusername/zotero-rdf/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/yourusername/zotero-rdf/releases/tag/v0.1.0
+[Unreleased]: https://github.com/spartajet/zotero-rdf/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/spartajet/zotero-rdf/releases/tag/v0.1.0
