@@ -5,16 +5,63 @@ use std::collections::HashSet;
 use tracing::{debug, info, instrument, trace, warn};
 
 /// RDF 图提取器，用于将原始 RDF 数据转换为结构化的 ZoteroItem
+///
+/// `Extractor` 从解析后的 RDF 图中提取 Zotero 条目，包括：
+/// - 条目类型（journalArticle, book, thesis 等）
+/// - 标题、日期、DOI、摘要
+/// - 作者列表（保持原始顺序）
+/// - 附件（PDF 等）
+///
+/// # Example
+///
+/// ```rust,no_run
+/// use zotero_rdf::{parse_file, Extractor};
+///
+/// let graph = parse_file("my_library.rdf")?;
+/// let extractor = Extractor::new(&graph);
+/// let items = extractor.extract_all();
+///
+/// for item in items {
+///     println!("Title: {:?}", item.title);
+///     println!("Authors: {}", item.authors.len());
+/// }
+/// # Ok::<(), zotero_rdf::ZoteroRdfError>(())
+/// ```
 pub struct Extractor<'a> {
     graph: &'a Graph,
 }
 
 impl<'a> Extractor<'a> {
+    /// 创建新的提取器
+    ///
+    /// # Arguments
+    ///
+    /// * `graph` - 解析后的 RDF 图的引用
     pub fn new(graph: &'a Graph) -> Self {
         Self { graph }
     }
 
     /// 从 Graph 中提取所有 Zotero 条目（不包括 attachment）
+    ///
+    /// 遍历图中所有包含 `z:itemType` 谓词的节点，将其转换为 `ZoteroItem`。
+    /// 附件类型（`z:itemType="attachment"`）会被跳过，它们会作为主条目的字段处理。
+    ///
+    /// # Returns
+    ///
+    /// 返回 `Vec<ZoteroItem>`，包含所有提取的条目。
+    ///
+    /// # Example
+    ///
+    /// ```rust,no_run
+    /// use zotero_rdf::{parse_file, Extractor};
+    ///
+    /// let graph = parse_file("my_library.rdf")?;
+    /// let extractor = Extractor::new(&graph);
+    /// let items = extractor.extract_all();
+    ///
+    /// println!("Found {} items", items.len());
+    /// # Ok::<(), zotero_rdf::ZoteroRdfError>(())
+    /// ```
     #[instrument(skip(self), fields(graph_len = %self.graph.len()))]
     pub fn extract_all(&self) -> Vec<ZoteroItem> {
         info!("开始提取 Zotero 条目");
