@@ -168,7 +168,7 @@ fn test_link_predicate() {
     // 查找 item_33 的所有 link:link 关联
     debug!("=== item_33 的 link:link 关联 ===");
     let item_33_uri = oxrdf::NamedNode::new("http://zotero.org/export#item_33").unwrap();
-    let subject = oxrdf::Subject::from(item_33_uri);
+    let subject = oxrdf::NamedOrBlankNode::from(item_33_uri);
     for triple in graph.triples_for_subject(&subject) {
         let pred = triple.predicate.as_str();
         if pred == "http://purl.org/rss/1.0/modules/link/link" {

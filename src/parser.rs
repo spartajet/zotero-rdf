@@ -139,7 +139,7 @@ pub fn parse_reader_with_options<R: Read>(
     for triple_result in parser.for_reader(reader) {
         match triple_result {
             Ok(triple) => {
-                graph.insert(&triple);
+                graph.insert(triple.as_ref());
                 stats.triples_count += 1;
             }
             Err(e) => {
@@ -206,7 +206,7 @@ pub fn parse_reader_with_stats<R: Read>(
     for triple_result in parser.for_reader(reader) {
         match triple_result {
             Ok(triple) => {
-                graph.insert(&triple);
+                graph.insert(triple.as_ref());
                 stats.triples_count += 1;
             }
             Err(e) => {

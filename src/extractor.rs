@@ -1,6 +1,6 @@
 use crate::model::{Attachment, Author, ZoteroItem};
 use crate::vocab;
-use oxrdf::{Graph, Subject, Term};
+use oxrdf::{Graph, NamedOrBlankNode, Term};
 use std::collections::HashSet;
 use tracing::{debug, info, instrument, trace, warn};
 
@@ -67,13 +67,13 @@ impl<'a> Extractor<'a> {
     pub fn extract_all(&self) -> Vec<ZoteroItem> {
         info!("Starting Zotero item extraction");
         let mut items = Vec::new();
-        let mut processed_subjects: HashSet<Subject> = HashSet::new();
+        let mut processed_subjects: HashSet<NamedOrBlankNode> = HashSet::new();
         let mut attachment_count = 0;
 
         for triple in self.graph.iter() {
             if triple.predicate == *vocab::Z_ITEM_TYPE {
-                let subject: Subject = triple.subject.into();
-                // Ensure we don't process the same Subject twice
+                let subject: NamedOrBlankNode = triple.subject.into();
+                // Ensure we don't process the same NamedOrBlankNode twice
                 if processed_subjects.contains(&subject) {
                     continue;
                 }
@@ -103,7 +103,7 @@ impl<'a> Extractor<'a> {
     }
 
     #[instrument(skip(self), fields(uri = %subject))]
-    fn extract_item(&self, subject: &Subject) -> Option<ZoteroItem> {
+    fn extract_item(&self, subject: &NamedOrBlankNode) -> Option<ZoteroItem> {
         // 1. Basic information
         let uri = subject.to_string();
         let item_type = self.get_literal(subject, &vocab::Z_ITEM_TYPE)?;
@@ -144,7 +144,7 @@ impl<'a> Extractor<'a> {
 
     /// Extracts and sorts authors
     #[instrument(skip(self), fields(uri = %subject))]
-    fn extract_authors(&self, subject: &Subject) -> Vec<Author> {
+    fn extract_authors(&self, subject: &NamedOrBlankNode) -> Vec<Author> {
         let mut indexed_authors: Vec<(u32, Author)> = Vec::new();
 
         // A. Find the target of bib:authors (Zotero uses bib:authors, not dc:creator)
@@ -154,7 +154,7 @@ impl<'a> Extractor<'a> {
             if self.is_rdf_seq(&creator_obj) {
                 trace!("Author list uses rdf:Seq structure");
                 // B. Parse ordered elements in Seq container (rdf:_1, rdf:_2, ...)
-                // Need to extract Subject from Term
+                // Need to extract NamedOrBlankNode from Term
                 if let Some(seq_subject) = term_to_subject(&creator_obj) {
                     for triple in self.graph.triples_for_subject(&seq_subject) {
                         let pred_str = triple.predicate.as_str();
@@ -192,7 +192,7 @@ impl<'a> Extractor<'a> {
 
     /// Extracts attachment list
     #[instrument(skip(self), fields(uri = %subject))]
-    fn extract_attachments(&self, subject: &Subject) -> Vec<Attachment> {
+    fn extract_attachments(&self, subject: &NamedOrBlankNode) -> Vec<Attachment> {
         let mut attachments = Vec::new();
 
         // Find all attachments linked via link:link
@@ -200,8 +200,8 @@ impl<'a> Extractor<'a> {
             if triple.predicate == vocab::LINK_LINK.as_ref() {
                 // Get the attachment's URI
                 if let oxrdf::TermRef::NamedNode(nn) = &triple.object {
-                    // Directly use NamedNode to create Subject
-                    let attachment_subject = Subject::from(*nn);
+                    // Directly use NamedNode to create NamedOrBlankNode
+                    let attachment_subject = NamedOrBlankNode::from(*nn);
                     if let Some(attachment) =
                         self.extract_attachment_from_subject(&attachment_subject)
                     {
@@ -213,7 +213,7 @@ impl<'a> Extractor<'a> {
                     }
                 } else if let oxrdf::TermRef::BlankNode(bn) = &triple.object {
                     // Attachment might be a BlankNode
-                    let attachment_subject = Subject::from(*bn);
+                    let attachment_subject = NamedOrBlankNode::from(*bn);
                     if let Some(attachment) =
                         self.extract_attachment_from_subject(&attachment_subject)
                     {
@@ -226,8 +226,8 @@ impl<'a> Extractor<'a> {
         attachments
     }
 
-    /// Extracts attachment information from a Subject
-    fn extract_attachment_from_subject(&self, subject: &Subject) -> Option<Attachment> {
+    /// Extracts attachment information from a NamedOrBlankNode
+    fn extract_attachment_from_subject(&self, subject: &NamedOrBlankNode) -> Option<Attachment> {
         let uri = subject.to_string();
         let title = self.get_literal(subject, &vocab::DC_TITLE);
         let content_type = self.get_literal(subject, &vocab::LINK_TYPE);
@@ -244,13 +244,13 @@ impl<'a> Extractor<'a> {
     }
 
     /// Extracts attachment URL from dc:identifier
-    fn extract_attachment_url(&self, subject: &Subject) -> Option<String> {
+    fn extract_attachment_url(&self, subject: &NamedOrBlankNode) -> Option<String> {
         // dc:identifier may contain a dcterms:URI node
         if let Some(identifier_obj) = self.get_object(subject, &vocab::DC_IDENTIFIER) {
             match &identifier_obj {
                 Term::BlankNode(bn) => {
                     // Find rdf:value in dcterms:URI node
-                    let subject = Subject::from(bn.clone());
+                    let subject = NamedOrBlankNode::from(bn.clone());
                     self.get_literal(&subject, &vocab::RDF_VALUE)
                 }
                 Term::Literal(lit) => Some(lit.value().to_string()),
@@ -266,7 +266,7 @@ impl<'a> Extractor<'a> {
         self.extract_person(&subject)
     }
 
-    fn extract_person(&self, subject: &Subject) -> Option<Author> {
+    fn extract_person(&self, subject: &NamedOrBlankNode) -> Option<Author> {
         let surname = self.get_literal(subject, &vocab::FOAF_SURNAME);
         let given = self.get_literal(subject, &vocab::FOAF_GIVENNAME);
 
@@ -284,14 +284,14 @@ impl<'a> Extractor<'a> {
     }
 
     /// Gets object term
-    fn get_object(&self, subject: &Subject, predicate: &oxrdf::NamedNode) -> Option<Term> {
+    fn get_object(&self, subject: &NamedOrBlankNode, predicate: &oxrdf::NamedNode) -> Option<Term> {
         self.graph
             .object_for_subject_predicate(subject, predicate)
             .map(|t| t.into_owned())
     }
 
     /// Gets literal value
-    fn get_literal(&self, subject: &Subject, predicate: &oxrdf::NamedNode) -> Option<String> {
+    fn get_literal(&self, subject: &NamedOrBlankNode, predicate: &oxrdf::NamedNode) -> Option<String> {
         self.get_object(subject, predicate).and_then(|obj| {
             if let Term::Literal(lit) = obj {
                 Some(lit.value().to_string())
@@ -314,11 +314,11 @@ impl<'a> Extractor<'a> {
     }
 }
 
-/// Extracts Subject from Term (only supports BlankNode and NamedNode)
-fn term_to_subject(term: &Term) -> Option<Subject> {
+/// Extracts NamedOrBlankNode from Term (only supports BlankNode and NamedNode)
+fn term_to_subject(term: &Term) -> Option<NamedOrBlankNode> {
     match term {
-        Term::BlankNode(bn) => Some(Subject::from(bn.clone())),
-        Term::NamedNode(nn) => Some(Subject::from(nn.clone())),
+        Term::BlankNode(bn) => Some(NamedOrBlankNode::from(bn.clone())),
+        Term::NamedNode(nn) => Some(NamedOrBlankNode::from(nn.clone())),
         _ => None,
     }
 }
