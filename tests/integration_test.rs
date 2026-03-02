@@ -1,18 +1,36 @@
 use oxrdf::NamedNode;
+use std::sync::Once;
+use tracing::{debug, info, trace};
 use zotero_rdf::{Extractor, ZoteroRdfError, parse_file};
 
 const TEST_RDF_FILE: &str = "rdfs/gear-measure-without-attachments.rdf";
 
+static TRACING_INIT: Once = Once::new();
+
+/// 初始化 tracing 日志（只执行一次）
+fn init_tracing() {
+    TRACING_INIT.call_once(|| {
+        tracing_subscriber::fmt()
+            .with_env_filter(
+                tracing_subscriber::EnvFilter::try_from_default_env()
+                    .unwrap_or_else(|_| tracing_subscriber::EnvFilter::new("trace")),
+            )
+            .with_test_writer()
+            .init();
+    });
+}
+
 /// 测试解析 Zotero RDF 文件成功
 #[test]
 fn test_parse_zotero_file_success() {
+    init_tracing();
     let result = parse_file(TEST_RDF_FILE);
 
     assert!(result.is_ok(), "Failed to parse file: {:?}", result.err());
     let graph = result.unwrap();
 
     // 真实的 Zotero 导出文件应该包含大量三元组
-    println!("Graph contains {} triples", graph.len());
+    info!("Graph contains {} triples", graph.len());
     assert!(
         graph.len() > 100,
         "Graph should contain many triples, got {}",
@@ -34,6 +52,7 @@ fn test_parse_zotero_file_success() {
 /// 测试解析不存在的文件
 #[test]
 fn test_parse_invalid_path() {
+    init_tracing();
     let result = parse_file("non/existent/path.rdf");
     assert!(result.is_err());
 
@@ -46,6 +65,7 @@ fn test_parse_invalid_path() {
 /// 测试提取 Zotero 条目
 #[test]
 fn test_extract_items() {
+    init_tracing();
     let graph = parse_file(TEST_RDF_FILE).expect("Failed to parse file");
     let extractor = Extractor::new(&graph);
     let items = extractor.extract_all();
@@ -53,22 +73,25 @@ fn test_extract_items() {
     assert!(!items.is_empty(), "Should extract at least one item");
 
     // 打印所有条目
-    println!("\n========== 共提取 {} 个条目 ==========\n", items.len());
+    info!("========== 共提取 {} 个条目 ==========", items.len());
     for (i, item) in items.iter().enumerate() {
-        println!("[{}] URI: {}", i + 1, item.uri);
-        println!("    类型: {}", item.item_type);
-        println!("    标题: {}", item.title.as_deref().unwrap_or("(无标题)"));
+        debug!(
+            "[{}] uri={} type={} title={}",
+            i + 1,
+            item.uri,
+            item.item_type,
+            item.title.as_deref().unwrap_or("(无标题)")
+        );
+
         if !item.authors.is_empty() {
-            println!("    作者:");
-            for author in &item.authors {
-                println!("      - {}", author.display_name());
-            }
+            let authors: Vec<String> = item.authors.iter().map(|a| a.display_name()).collect();
+            trace!("    作者: {}", authors.join(", "));
         }
         if let Some(date) = &item.date {
-            println!("    日期: {}", date);
+            trace!("    日期: {}", date);
         }
         if let Some(doi) = &item.doi {
-            println!("    DOI: {}", doi);
+            trace!("    DOI: {}", doi);
         }
         if let Some(abstract_note) = &item.abstract_note {
             // 摘要可能很长，只显示前 100 个字符
@@ -77,21 +100,17 @@ fn test_extract_items() {
             } else {
                 abstract_note.clone()
             };
-            println!("    摘要: {}", preview);
+            trace!("    摘要: {}", preview);
         }
         if !item.attachments.is_empty() {
-            println!("    附件:");
             for attachment in &item.attachments {
-                println!(
-                    "      - {}",
-                    attachment.title.as_deref().unwrap_or("(无标题)")
+                trace!(
+                    "    附件: {} ({})",
+                    attachment.title.as_deref().unwrap_or("(无标题)"),
+                    attachment.content_type.as_deref().unwrap_or("未知类型")
                 );
-                if let Some(content_type) = &attachment.content_type {
-                    println!("        类型: {}", content_type);
-                }
             }
         }
-        println!();
     }
 
     let first_item = &items[0];
@@ -106,6 +125,7 @@ fn test_extract_items() {
 /// 测试作者顺序
 #[test]
 fn test_author_order() {
+    init_tracing();
     let graph = parse_file(TEST_RDF_FILE).expect("Failed to parse file");
     let extractor = Extractor::new(&graph);
     let items = extractor.extract_all();
@@ -113,14 +133,14 @@ fn test_author_order() {
     // 找到有作者的条目
     let item_with_authors = items.iter().find(|item| !item.authors.is_empty());
     if let Some(item) = item_with_authors {
-        println!(
+        debug!(
             "Item with {} authors: {}",
             item.authors.len(),
             item.title.as_deref().unwrap_or("")
         );
         // 作者顺序应该保持与 Zotero 导出时一致
         for (i, author) in item.authors.iter().enumerate() {
-            println!("  [{}] {}", i + 1, author.display_name());
+            trace!("  [{}] {}", i + 1, author.display_name());
         }
     }
 }
@@ -128,6 +148,7 @@ fn test_author_order() {
 /// 测试 link:link 谓词解析
 #[test]
 fn test_link_predicate() {
+    init_tracing();
     let graph = parse_file(TEST_RDF_FILE).expect("Failed to parse file");
 
     // 查找所有包含 "link" 的谓词
@@ -139,23 +160,19 @@ fn test_link_predicate() {
         }
     }
 
-    println!("\n=== 包含 'link' 的谓词 ===");
+    debug!("=== 包含 'link' 的谓词 ===");
     for pred in &link_predicates {
-        println!("  {}", pred);
+        trace!("  {}", pred);
     }
 
-    // 打印期望的 LINK_LINK 值
-    println!("\n=== 期望的 LINK_LINK 值 ===");
-    println!("  http://purl.org/rss/1.0/modules/link/link");
-
     // 查找 item_33 的所有 link:link 关联
-    println!("\n=== item_33 的 link:link 关联 ===");
+    debug!("=== item_33 的 link:link 关联 ===");
     let item_33_uri = oxrdf::NamedNode::new("http://zotero.org/export#item_33").unwrap();
     let subject = oxrdf::Subject::from(item_33_uri);
     for triple in graph.triples_for_subject(&subject) {
         let pred = triple.predicate.as_str();
         if pred == "http://purl.org/rss/1.0/modules/link/link" {
-            println!("  Object: {}", triple.object);
+            trace!("  Object: {}", triple.object);
         }
     }
 
