@@ -79,12 +79,12 @@ impl<'a> Extractor<'a> {
                 processed_subjects.insert(subject.clone());
 
                 // 获取 item_type 并跳过 attachment 类型
-                if let Some(item_type) = self.get_literal(&subject, &vocab::Z_ITEM_TYPE) {
-                    if item_type == "attachment" {
-                        attachment_count += 1;
-                        trace!("跳过 attachment 类型条目: {}", subject);
-                        continue; // 跳过 attachment，它们会作为主条目的字段处理
-                    }
+                if let Some(item_type) = self.get_literal(&subject, &vocab::Z_ITEM_TYPE)
+                    && item_type == "attachment"
+                {
+                    attachment_count += 1;
+                    trace!("跳过 attachment 类型条目: {}", subject);
+                    continue; // 跳过 attachment，它们会作为主条目的字段处理
                 }
 
                 if let Some(item) = self.extract_item(&subject) {
@@ -200,7 +200,7 @@ impl<'a> Extractor<'a> {
                 // 获取附件的 URI
                 if let oxrdf::TermRef::NamedNode(nn) = &triple.object {
                     // 直接使用 NamedNode 创建 Subject
-                    let attachment_subject = Subject::from(nn.clone());
+                    let attachment_subject = Subject::from(*nn);
                     if let Some(attachment) =
                         self.extract_attachment_from_subject(&attachment_subject)
                     {
@@ -212,7 +212,7 @@ impl<'a> Extractor<'a> {
                     }
                 } else if let oxrdf::TermRef::BlankNode(bn) = &triple.object {
                     // 附件可能是 BlankNode
-                    let attachment_subject = Subject::from(bn.clone());
+                    let attachment_subject = Subject::from(*bn);
                     if let Some(attachment) =
                         self.extract_attachment_from_subject(&attachment_subject)
                     {

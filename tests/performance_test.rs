@@ -110,7 +110,7 @@ fn test_full_pipeline_performance() {
 fn test_memory_efficiency() {
     init_tracing();
 
-    let (graph, stats) = parse_file_with_stats(TEST_RDF_FILE).expect("Failed to parse file");
+    let (_, stats) = parse_file_with_stats(TEST_RDF_FILE).expect("Failed to parse file");
 
     // 估算每个三元组的平均内存占用
     // oxrdf 内部使用 Arc 和高效存储，预期每个三元组约 200-500 字节

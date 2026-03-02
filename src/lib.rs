@@ -33,13 +33,9 @@ mod vocab;
 pub use error::{ErrorLocation, ParseOptions, ParseStats, ZoteroRdfError};
 pub use extractor::Extractor;
 pub use model::{Attachment, Author, ZoteroItem};
+pub use oxrdf::Graph;
 pub use parser::{
-    parse_file, parse_file_with_base, parse_file_with_options, parse_file_with_options_and_base,
-    parse_file_with_stats, parse_reader, parse_reader_with_base, parse_reader_with_stats,
-    parse_reader_with_options, DEFAULT_BASE_IRI,
-};
-pub use oxrdf::Graph; // 重导出 Graph，方便用户使用
-
-// 内部词汇表（测试时需要）
-#[cfg(test)]
-pub(crate) use vocab::*;
+    DEFAULT_BASE_IRI, parse_file, parse_file_with_base, parse_file_with_options,
+    parse_file_with_options_and_base, parse_file_with_stats, parse_reader, parse_reader_with_base,
+    parse_reader_with_options, parse_reader_with_stats,
+}; // 重导出 Graph，方便用户使用

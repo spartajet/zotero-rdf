@@ -1,9 +1,9 @@
 //! Zotero 数据模型
 //!
 //! 本模块定义了 Zotero 条目的数据结构，包括：
-//! - [`ZoteroItem`]: 代表一个文献条目（期刊文章、书籍等）
-//! - [`Author`]: 代表作者信息
-//! - [`Attachment`]: 代表附件信息（PDF 等）
+//! - [`ZoteroItem`]：代表一个文献条目（期刊文章、书籍等）
+//! - [`Author`]：代表作者信息
+//! - [`Attachment`]：代表附件信息（PDF 等）
 
 use serde::{Deserialize, Serialize};
 

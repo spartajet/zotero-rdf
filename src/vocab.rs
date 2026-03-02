@@ -11,50 +11,51 @@ pub const NS_BIBO: &str = "http://purl.org/ontology/bibo/";
 pub const NS_BIB: &str = "http://purl.org/net/biblio#";
 pub const NS_LINK: &str = "http://purl.org/rss/1.0/modules/link/";
 
-// --- 预构造的 NamedNode 常量 (用于高效查询) ---
+// --- 预构造的 NamedNode 静态变量 (用于高效查询) ---
+// 使用 static 而非 const，因为 Lazy<T> 具有内部可变性
 
 // RDF
-pub const RDF_TYPE: Lazy<NamedNode> =
+pub static RDF_TYPE: Lazy<NamedNode> =
     Lazy::new(|| NamedNode::new_unchecked(format!("{}type", NS_RDF)));
-pub const RDF_SEQ: Lazy<NamedNode> =
+pub static RDF_SEQ: Lazy<NamedNode> =
     Lazy::new(|| NamedNode::new_unchecked(format!("{}Seq", NS_RDF)));
-pub const RDF_VALUE: Lazy<NamedNode> =
+pub static RDF_VALUE: Lazy<NamedNode> =
     Lazy::new(|| NamedNode::new_unchecked(format!("{}value", NS_RDF)));
 
 // Zotero Specifics
-pub const Z_ITEM_TYPE: Lazy<NamedNode> =
+pub static Z_ITEM_TYPE: Lazy<NamedNode> =
     Lazy::new(|| NamedNode::new_unchecked(format!("{}itemType", NS_ZOTERO)));
 
 // Dublin Core
-pub const DC_TITLE: Lazy<NamedNode> =
+pub static DC_TITLE: Lazy<NamedNode> =
     Lazy::new(|| NamedNode::new_unchecked(format!("{}title", NS_DC)));
-pub const DC_DATE: Lazy<NamedNode> =
+pub static DC_DATE: Lazy<NamedNode> =
     Lazy::new(|| NamedNode::new_unchecked(format!("{}date", NS_DC)));
-pub const DC_IDENTIFIER: Lazy<NamedNode> =
+pub static DC_IDENTIFIER: Lazy<NamedNode> =
     Lazy::new(|| NamedNode::new_unchecked(format!("{}identifier", NS_DC)));
 
 // Dublin Core Terms
-pub const DCTERMS_ABSTRACT: Lazy<NamedNode> =
+pub static DCTERMS_ABSTRACT: Lazy<NamedNode> =
     Lazy::new(|| NamedNode::new_unchecked(format!("{}abstract", NS_DCTERMS)));
 
 // BIB (Biblio)
-pub const BIB_AUTHORS: Lazy<NamedNode> =
+pub static BIB_AUTHORS: Lazy<NamedNode> =
     Lazy::new(|| NamedNode::new_unchecked(format!("{}authors", NS_BIB)));
 
 // FOAF (Author info)
-pub const FOAF_SURNAME: Lazy<NamedNode> =
+pub static FOAF_SURNAME: Lazy<NamedNode> =
     Lazy::new(|| NamedNode::new_unchecked(format!("{}surname", NS_FOAF)));
-pub const FOAF_GIVENNAME: Lazy<NamedNode> =
+pub static FOAF_GIVENNAME: Lazy<NamedNode> =
     Lazy::new(|| NamedNode::new_unchecked(format!("{}givenName", NS_FOAF)));
 
 // BIBO (Citations)
-pub const BIBO_DOI: Lazy<NamedNode> =
+pub static BIBO_DOI: Lazy<NamedNode> =
     Lazy::new(|| NamedNode::new_unchecked(format!("{}doi", NS_BIBO)));
 
 // Link (Attachments)
-pub const LINK_LINK: Lazy<NamedNode> =
+pub static LINK_LINK: Lazy<NamedNode> =
     Lazy::new(|| NamedNode::new_unchecked(format!("{}link", NS_LINK)));
-pub const LINK_TYPE: Lazy<NamedNode> =
+pub static LINK_TYPE: Lazy<NamedNode> =
     Lazy::new(|| NamedNode::new_unchecked(format!("{}type", NS_LINK)));
 
 /// 检查谓词是否为 RDF 序数属性 (rdf:_1, rdf:_2, ...)
