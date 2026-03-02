@@ -1,14 +1,12 @@
-pub fn add(left: u64, right: u64) -> u64 {
-    left + right
-}
+mod error;
+mod parser;
+mod vocab;
 
+// --- 导出公共 API ---
+pub use error::ZoteroRdfError;
+pub use parser::{parse_file, parse_file_with_base, parse_reader, parse_reader_with_base, DEFAULT_BASE_IRI};
+pub use oxrdf::Graph; // 重导出 Graph，方便用户使用
+
+// 内部词汇表（测试时需要）
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
-    }
-}
+pub(crate) use vocab::*;

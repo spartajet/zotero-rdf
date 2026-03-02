@@ -8,12 +8,8 @@
 ---
 ## 📅 实施步骤清单
 ### 步骤 1: 项目初始化与依赖配置
-**任务描述**：创建 Rust 库项目，并添加核心解析依赖。
+**任务描述**：并添加核心解析依赖。
 **操作指令**：
-```bash
-cargo new --lib zotero-rdf
-cd zotero-rdf
-```
 **文件修改 (`Cargo.toml`)**：
 ```toml
 [package]
