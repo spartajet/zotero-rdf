@@ -232,6 +232,9 @@ impl<'a> Extractor<'a> {
         let title = self.get_literal(subject, &vocab::DC_TITLE);
         let content_type = self.get_literal(subject, &vocab::LINK_TYPE);
 
+        // Extract local file path from rdf:resource (URI reference, not literal)
+        let path = self.get_uri(subject, &vocab::RDF_RESOURCE);
+
         // Extract URL from dc:identifier
         let url = self.extract_attachment_url(subject);
 
@@ -239,6 +242,7 @@ impl<'a> Extractor<'a> {
             uri,
             title,
             content_type,
+            path,
             url,
         })
     }
@@ -291,10 +295,25 @@ impl<'a> Extractor<'a> {
     }
 
     /// Gets literal value
-    fn get_literal(&self, subject: &NamedOrBlankNode, predicate: &oxrdf::NamedNode) -> Option<String> {
+    fn get_literal(
+        &self,
+        subject: &NamedOrBlankNode,
+        predicate: &oxrdf::NamedNode,
+    ) -> Option<String> {
         self.get_object(subject, predicate).and_then(|obj| {
             if let Term::Literal(lit) = obj {
                 Some(lit.value().to_string())
+            } else {
+                None
+            }
+        })
+    }
+
+    /// Gets URI value (NamedNode)
+    fn get_uri(&self, subject: &NamedOrBlankNode, predicate: &oxrdf::NamedNode) -> Option<String> {
+        self.get_object(subject, predicate).and_then(|obj| {
+            if let Term::NamedNode(node) = obj {
+                Some(node.to_string())
             } else {
                 None
             }
