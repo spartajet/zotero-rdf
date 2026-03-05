@@ -22,6 +22,8 @@ once_cell = "1.21"
 # Core RDF data structures
 oxrdf = "0.3"
 oxrdfxml = "0.2"
+# Regular expressions for preprocessing
+regex = "1"
 # Serialization support
 serde = { version = "1.0", features = ["derive"] }
 # Error handling
@@ -30,6 +32,8 @@ thiserror = "2"
 tracing = "0.1"
 
 [dev-dependencies]
+# JSON serialization for tests
+serde_json = "1"
 # Logging subscriber for tests
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
