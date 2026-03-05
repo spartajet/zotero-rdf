@@ -17,7 +17,7 @@ pub const DEFAULT_BASE_IRI: &str = "http://zotero.org/export#";
 ///
 /// Handles the following issues:
 /// 1. Invalid `<rdf:resource rdf:resource="..."/>` elements (converts to `<z:file rdf:resource="..."/>`)
-/// 2. `rdf:resource` attribute values with spaces in relative paths (URL-encodes them)
+/// 2. `rdf:resource` attribute values with IRI-unsafe characters in relative paths (URL-encodes them)
 fn preprocess_rdf_content(content: &str) -> String {
     // Step 1: Convert invalid <rdf:resource rdf:resource="..."/> elements to <z:file rdf:resource="..."/>
     // This pattern matches the invalid element structure that Zotero sometimes generates
@@ -25,31 +25,60 @@ fn preprocess_rdf_content(content: &str) -> String {
 
     let content = invalid_element_re.replace_all(content, |caps: &regex::Captures| {
         let value = &caps[1];
-        // URL encode spaces in relative paths
-        let encoded = encode_spaces_in_relative_path(value);
+        // URL encode IRI-unsafe characters in relative paths
+        let encoded = encode_iri_unsafe_chars(value);
         format!(r#"<z:file rdf:resource="{}"/>"#, encoded)
     });
 
-    // Step 2: URL encode spaces in rdf:resource attribute values for relative paths
+    // Step 2: URL encode IRI-unsafe characters in rdf:resource attribute values for relative paths
     // This handles cases like <link:link rdf:resource="files/123/file name.pdf"/>
     let resource_attr_re = Regex::new(r#"rdf:resource="([^"]*)""#).unwrap();
 
     resource_attr_re
         .replace_all(&content, |caps: &regex::Captures| {
             let value = &caps[1];
-            let encoded = encode_spaces_in_relative_path(value);
+            let encoded = encode_iri_unsafe_chars(value);
             format!(r#"rdf:resource="{}""#, encoded)
         })
         .into_owned()
 }
 
-/// Encodes spaces as %20 in relative paths, preserving absolute URIs
-fn encode_spaces_in_relative_path(value: &str) -> String {
+/// Encodes IRI-unsafe characters in relative paths, preserving absolute URIs
+///
+/// IRI-safe characters include: A-Z a-z 0-9 - . _ ~ / ? # [ ] @ ! $ & ' ( ) * + , ; = %
+/// For file paths, we encode: spaces, non-ASCII characters, and special symbols
+fn encode_iri_unsafe_chars(value: &str) -> String {
     // Don't modify absolute URIs (http://, https://, urn:, #fragment)
     if value.contains("://") || value.starts_with("urn:") || value.starts_with('#') {
         value.to_string()
     } else {
-        value.replace(' ', "%20")
+        // Only encode characters that are not IRI-safe for file paths
+        // Keep: A-Z a-z 0-9 - . _ ~ / % (already encoded)
+        let mut result = String::with_capacity(value.len());
+        for ch in value.chars() {
+            match ch {
+                // Keep IRI-safe characters as-is
+                'A'..='Z' | 'a'..='z' | '0'..='9' | '-' | '.' | '_' | '~' | '/' => {
+                    result.push(ch);
+                }
+                // Already encoded sequences (e.g., %20) - keep as-is
+                '%' => {
+                    result.push(ch);
+                }
+                // Encode space as %20
+                ' ' => {
+                    result.push_str("%20");
+                }
+                // Encode all other characters (non-ASCII, special symbols)
+                _ => {
+                    // URL encode the character
+                    let ch_str = ch.to_string();
+                    let encoded = urlencoding::encode(&ch_str);
+                    result.push_str(&encoded);
+                }
+            }
+        }
+        result
     }
 }
 
