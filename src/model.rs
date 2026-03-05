@@ -176,10 +176,12 @@ impl Author {
 ///     uri: "http://example.org/attachment/1".to_string(),
 ///     title: Some("paper.pdf".to_string()),
 ///     content_type: Some("application/pdf".to_string()),
-///     url: Some("files/paper.pdf".to_string()),
+///     path: Some("files/2474/paper.pdf".to_string()),
+///     url: Some("https://example.com/paper.pdf".to_string()),
 /// };
 ///
 /// assert_eq!(attachment.content_type, Some("application/pdf".to_string()));
+/// assert_eq!(attachment.path, Some("files/2474/paper.pdf".to_string()));
 /// ```
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Attachment {
@@ -201,11 +203,19 @@ pub struct Attachment {
     /// - `text/plain` - Plain text
     pub content_type: Option<String>,
 
-    /// Attachment link (file path or URL)
+    /// Local file path (relative or absolute)
     ///
-    /// May be:
-    /// - Relative file path (e.g., `files/paper.pdf`)
-    /// - Absolute file path
-    /// - HTTP URL
+    /// Corresponds to `rdf:resource` in Zotero RDF exports.
+    /// This is the path where the attachment file is stored locally.
+    ///
+    /// Example: `files/2474/paper.pdf`
+    pub path: Option<String>,
+
+    /// Original URL (from dc:identifier)
+    ///
+    /// The original web URL where the file was downloaded from.
+    /// May be `None` for locally created attachments.
+    ///
+    /// Example: `https://example.com/paper.pdf`
     pub url: Option<String>,
 }

@@ -25,6 +25,8 @@ pub static RDF_VALUE: Lazy<NamedNode> =
 // Zotero Specifics
 pub static Z_ITEM_TYPE: Lazy<NamedNode> =
     Lazy::new(|| NamedNode::new_unchecked(format!("{}itemType", NS_ZOTERO)));
+pub static Z_FILE: Lazy<NamedNode> =
+    Lazy::new(|| NamedNode::new_unchecked(format!("{}file", NS_ZOTERO)));
 
 // Dublin Core
 pub static DC_TITLE: Lazy<NamedNode> =

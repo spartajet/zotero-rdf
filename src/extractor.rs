@@ -232,6 +232,12 @@ impl<'a> Extractor<'a> {
         let title = self.get_literal(subject, &vocab::DC_TITLE);
         let content_type = self.get_literal(subject, &vocab::LINK_TYPE);
 
+        // Extract local file path from z:file predicate (URI reference, not literal)
+        let path = self.get_uri(subject, &vocab::Z_FILE).and_then(|uri| {
+            // Extract the path portion from the URI and decode percent-encoding
+            extract_path_from_file_uri(&uri)
+        });
+
         // Extract URL from dc:identifier
         let url = self.extract_attachment_url(subject);
 
@@ -239,6 +245,7 @@ impl<'a> Extractor<'a> {
             uri,
             title,
             content_type,
+            path,
             url,
         })
     }
@@ -291,10 +298,25 @@ impl<'a> Extractor<'a> {
     }
 
     /// Gets literal value
-    fn get_literal(&self, subject: &NamedOrBlankNode, predicate: &oxrdf::NamedNode) -> Option<String> {
+    fn get_literal(
+        &self,
+        subject: &NamedOrBlankNode,
+        predicate: &oxrdf::NamedNode,
+    ) -> Option<String> {
         self.get_object(subject, predicate).and_then(|obj| {
             if let Term::Literal(lit) = obj {
                 Some(lit.value().to_string())
+            } else {
+                None
+            }
+        })
+    }
+
+    /// Gets URI value (NamedNode)
+    fn get_uri(&self, subject: &NamedOrBlankNode, predicate: &oxrdf::NamedNode) -> Option<String> {
+        self.get_object(subject, predicate).and_then(|obj| {
+            if let Term::NamedNode(node) = obj {
+                Some(node.to_string())
             } else {
                 None
             }
@@ -344,4 +366,67 @@ fn extract_doi_from_uri(uri: &str) -> Option<String> {
     }
 
     None
+}
+
+/// Extracts local file path from zotero file URI
+///
+/// Zotero stores file paths as URIs like:
+/// - `http://zotero.org/files/2469/paper.pdf`
+/// - `http://zotero.org/files/2478/Kihl%20and%20K%C3%A4llberg.pdf`
+///
+/// This function extracts the relative path portion and decodes percent-encoding.
+/// Returns path in format: `files/2469/paper.pdf`
+fn extract_path_from_file_uri(uri: &str) -> Option<String> {
+    // Remove RDF angle brackets if present
+    let uri = uri.trim_start_matches('<').trim_end_matches('>');
+
+    // Extract path from zotero.org/files/ URI
+    let path = if let Some(rest) = uri.strip_prefix("http://zotero.org/files/") {
+        // Prepend "files/" to maintain the expected format
+        format!("files/{}", rest)
+    } else {
+        // For other URIs, try to extract path after the last segment that looks like a directory
+        return None;
+    };
+
+    // Decode percent-encoding (e.g., %20 -> space, %C3%A4 -> ä)
+    match percent_decode(&path) {
+        Ok(decoded) => Some(decoded),
+        Err(e) => {
+            warn!("Failed to decode path '{}': {}", path, e);
+            Some(path) // Fallback to raw path
+        }
+    }
+}
+
+/// Decodes percent-encoded string
+fn percent_decode(s: &str) -> Result<String, std::string::FromUtf8Error> {
+    let mut bytes = Vec::new();
+    let mut chars = s.chars().peekable();
+
+    while let Some(c) = chars.next() {
+        if c == '%' {
+            // Try to parse the next two characters as hex
+            let hex: String = chars.by_ref().take(2).collect();
+            if hex.len() == 2 {
+                if let Ok(byte) = u8::from_str_radix(&hex, 16) {
+                    bytes.push(byte);
+                    continue;
+                }
+            }
+            // If parsing fails, push '%' and continue
+            bytes.push(b'%');
+            for c in hex.chars() {
+                bytes.push(c as u8);
+            }
+        } else {
+            // Handle UTF-8 characters
+            let mut buf = [0u8; 4];
+            for byte in c.encode_utf8(&mut buf).as_bytes() {
+                bytes.push(*byte);
+            }
+        }
+    }
+
+    String::from_utf8(bytes)
 }

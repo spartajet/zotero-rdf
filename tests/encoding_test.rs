@@ -11,6 +11,7 @@ use zotero_rdf::{Extractor, parse_file};
 // const TEST_RDF_FILE: &str = "rdfs/gear-measure-without-attachments.rdf";
 //
 const TEST_RDF_FILE: &str = r"C:\Users\guo\Downloads\我的文库\我的文库.rdf";
+// const TEST_RDF_FILE: &str = "rdfs/simulation-with-attachments/simulation-with-attachments.rdf";
 
 static TRACING_INIT: Once = Once::new();
 
