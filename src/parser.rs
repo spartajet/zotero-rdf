@@ -1,8 +1,9 @@
 use crate::error::{ParseOptions, ParseStats, ZoteroRdfError};
 use oxrdf::Graph;
 use oxrdfxml::RdfXmlParser;
+use regex::Regex;
 use std::fs::File;
-use std::io::{BufReader, Read};
+use std::io::{BufReader, Cursor, Read};
 use std::path::Path;
 use tracing::{debug, info, instrument, warn};
 
@@ -11,6 +12,75 @@ use tracing::{debug, info, instrument, warn};
 /// Zotero RDF exports typically use relative URIs (e.g., `#item_123`).
 /// This base IRI is used to resolve these relative references.
 pub const DEFAULT_BASE_IRI: &str = "http://zotero.org/export#";
+
+/// Preprocesses RDF/XML content to handle Zotero export quirks
+///
+/// Handles the following issues:
+/// 1. Invalid `<rdf:resource rdf:resource="..."/>` elements (converts to `<z:file rdf:resource="..."/>`)
+/// 2. `rdf:resource` attribute values with IRI-unsafe characters in relative paths (URL-encodes them)
+fn preprocess_rdf_content(content: &str) -> String {
+    // Step 1: Convert invalid <rdf:resource rdf:resource="..."/> elements to <z:file rdf:resource="..."/>
+    // This pattern matches the invalid element structure that Zotero sometimes generates
+    let invalid_element_re = Regex::new(r#"<rdf:resource\s+rdf:resource="([^"]*)"\s*/>"#).unwrap();
+
+    let content = invalid_element_re.replace_all(content, |caps: &regex::Captures| {
+        let value = &caps[1];
+        // URL encode IRI-unsafe characters in relative paths
+        let encoded = encode_iri_unsafe_chars(value);
+        format!(r#"<z:file rdf:resource="{}"/>"#, encoded)
+    });
+
+    // Step 2: URL encode IRI-unsafe characters in rdf:resource attribute values for relative paths
+    // This handles cases like <link:link rdf:resource="files/123/file name.pdf"/>
+    let resource_attr_re = Regex::new(r#"rdf:resource="([^"]*)""#).unwrap();
+
+    resource_attr_re
+        .replace_all(&content, |caps: &regex::Captures| {
+            let value = &caps[1];
+            let encoded = encode_iri_unsafe_chars(value);
+            format!(r#"rdf:resource="{}""#, encoded)
+        })
+        .into_owned()
+}
+
+/// Encodes IRI-unsafe characters in relative paths, preserving absolute URIs
+///
+/// IRI-safe characters include: A-Z a-z 0-9 - . _ ~ / ? # [ ] @ ! $ & ' ( ) * + , ; = %
+/// For file paths, we encode: spaces, non-ASCII characters, and special symbols
+fn encode_iri_unsafe_chars(value: &str) -> String {
+    // Don't modify absolute URIs (http://, https://, urn:, #fragment)
+    if value.contains("://") || value.starts_with("urn:") || value.starts_with('#') {
+        value.to_string()
+    } else {
+        // Only encode characters that are not IRI-safe for file paths
+        // Keep: A-Z a-z 0-9 - . _ ~ / % (already encoded)
+        let mut result = String::with_capacity(value.len());
+        for ch in value.chars() {
+            match ch {
+                // Keep IRI-safe characters as-is
+                'A'..='Z' | 'a'..='z' | '0'..='9' | '-' | '.' | '_' | '~' | '/' => {
+                    result.push(ch);
+                }
+                // Already encoded sequences (e.g., %20) - keep as-is
+                '%' => {
+                    result.push(ch);
+                }
+                // Encode space as %20
+                ' ' => {
+                    result.push_str("%20");
+                }
+                // Encode all other characters (non-ASCII, special symbols)
+                _ => {
+                    // URL encode the character
+                    let ch_str = ch.to_string();
+                    let encoded = urlencoding::encode(&ch_str);
+                    result.push_str(&encoded);
+                }
+            }
+        }
+        result
+    }
+}
 
 /// Parses a Zotero RDF file from a file path into an in-memory graph
 ///
@@ -128,6 +198,14 @@ pub fn parse_reader_with_options<R: Read>(
 ) -> Result<Graph, ZoteroRdfError> {
     let mut graph = Graph::default();
 
+    // Read and preprocess content to handle invalid IRI characters (e.g., spaces in file paths)
+    let mut content = String::new();
+    let mut buf_reader = BufReader::new(reader);
+    buf_reader.read_to_string(&mut content)?;
+
+    let preprocessed = preprocess_rdf_content(&content);
+    let cursor = Cursor::new(preprocessed.into_bytes());
+
     // Use oxrdfxml parser with base IRI for resolving relative IRIs
     let parser = RdfXmlParser::new()
         .with_base_iri(base_iri)
@@ -136,7 +214,7 @@ pub fn parse_reader_with_options<R: Read>(
     // for_reader returns a Triple iterator
     let mut stats = ParseStats::default();
 
-    for triple_result in parser.for_reader(reader) {
+    for triple_result in parser.for_reader(cursor) {
         match triple_result {
             Ok(triple) => {
                 graph.insert(triple.as_ref());
@@ -199,11 +277,19 @@ pub fn parse_reader_with_stats<R: Read>(
     let mut graph = Graph::default();
     let mut stats = ParseStats::default();
 
+    // Read and preprocess content to handle invalid IRI characters (e.g., spaces in file paths)
+    let mut content = String::new();
+    let mut buf_reader = BufReader::new(reader);
+    buf_reader.read_to_string(&mut content)?;
+
+    let preprocessed = preprocess_rdf_content(&content);
+    let cursor = Cursor::new(preprocessed.into_bytes());
+
     let parser = RdfXmlParser::new()
         .with_base_iri(base_iri)
         .map_err(|e| ZoteroRdfError::InvalidUri { uri: e.to_string() })?;
 
-    for triple_result in parser.for_reader(reader) {
+    for triple_result in parser.for_reader(cursor) {
         match triple_result {
             Ok(triple) => {
                 graph.insert(triple.as_ref());
@@ -229,4 +315,62 @@ pub fn parse_reader_with_stats<R: Read>(
     );
 
     Ok((graph, stats))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_preprocess_rdf_content_spaces_in_path() {
+        // Invalid <rdf:resource> element with relative path containing spaces
+        let input = r##"<rdf:resource rdf:resource="files/2469/Lima et al_2013_Modeling.pdf"/>"##;
+        let expected = r##"<z:file rdf:resource="files/2469/Lima%20et%20al_2013_Modeling.pdf"/>"##;
+        assert_eq!(preprocess_rdf_content(input), expected);
+    }
+
+    #[test]
+    fn test_preprocess_rdf_content_preserves_absolute_uris() {
+        // Invalid <rdf:resource> element with absolute URI - spaces not encoded but element still converted
+        let input = r##"<rdf:resource rdf:resource="https://example.com/path with spaces.pdf"/>"##;
+        let expected = r##"<z:file rdf:resource="https://example.com/path with spaces.pdf"/>"##;
+        assert_eq!(preprocess_rdf_content(input), expected);
+    }
+
+    #[test]
+    fn test_preprocess_rdf_content_preserves_fragment_uris() {
+        // Valid element with fragment URI - should remain unchanged
+        let input = r##"<link:link rdf:resource="#item_2469"/>"##;
+        assert_eq!(preprocess_rdf_content(input), input);
+    }
+
+    #[test]
+    fn test_preprocess_rdf_content_preserves_urn_uris() {
+        // Valid element with URN - should remain unchanged
+        let input = r##"<rdf:Description rdf:about="urn:isbn:978-3-319-00557-7"/>"##;
+        assert_eq!(preprocess_rdf_content(input), input);
+    }
+
+    #[test]
+    fn test_preprocess_rdf_content_multiple_resources() {
+        let input = r##"<link:link rdf:resource="#item_2469"/>
+<rdf:resource rdf:resource="files/2469/Some File.pdf"/>
+<link:link rdf:resource="https://example.com"/>"##;
+        let expected = r##"<link:link rdf:resource="#item_2469"/>
+<z:file rdf:resource="files/2469/Some%20File.pdf"/>
+<link:link rdf:resource="https://example.com"/>"##;
+        assert_eq!(preprocess_rdf_content(input), expected);
+    }
+
+    #[test]
+    fn test_preprocess_rdf_content_invalid_element() {
+        // Zotero sometimes generates invalid <rdf:resource rdf:resource="..."/> elements
+        let input = r##"<z:Attachment rdf:about="#item_2469">
+    <rdf:resource rdf:resource="files/2469/Some File.pdf"/>
+</z:Attachment>"##;
+        let expected = r##"<z:Attachment rdf:about="#item_2469">
+    <z:file rdf:resource="files/2469/Some%20File.pdf"/>
+</z:Attachment>"##;
+        assert_eq!(preprocess_rdf_content(input), expected);
+    }
 }

@@ -8,7 +8,16 @@
       "Bash(cargo test)",
       "Bash(git add Cargo.toml Cargo.lock src/lib.rs src/error.rs src/parser.rs src/vocab.rs tests/integration_test.rs docs/plan-p1.md)",
       "Bash(git commit:*)",
-      "Bash(cargo test test_extract_items -- --nocapture)"
+      "Bash(cargo test test_extract_items -- --nocapture)",
+      "mcp__mcp-server-github__create_repository",
+      "Bash(cargo doc --document-private-items)",
+      "Bash(cargo doc --open)",
+      "Bash(cargo doc --no-deps -p oxrdfxml)",
+      "Bash(cargo test test_preprocess -- --nocapture)",
+      "Bash(cargo test --test integration_test)",
+      "Bash(cargo test --test performance_test)",
+      "Bash(cargo test --test encoding_test)",
+      "Bash(cargo test test_json_output -- --nocapture)"
     ]
   }
 }
