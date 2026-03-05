@@ -21,7 +21,10 @@ fn test_attachment_path_extraction() {
         items_with_attachments.len()
     );
 
-    // Verify that attachments have path fields
+    // Count attachments with paths
+    let mut attachments_with_paths = 0;
+
+    // Verify that attachments with local files have path fields
     for item in &items_with_attachments {
         println!("\nItem: {}", item.title.as_deref().unwrap_or("(untitled)"));
         println!("  Attachments count: {}", item.attachments.len());
@@ -35,27 +38,24 @@ fn test_attachment_path_extraction() {
             println!("      URL: {:?}", attachment.url);
             println!("      Content-Type: {:?}", attachment.content_type);
 
-            // Verify path is extracted (should not be None for real attachments)
-            assert!(
-                attachment.path.is_some(),
-                "Attachment '{}' should have a path field",
-                attachment.title.as_deref().unwrap_or("(untitled)")
-            );
-
-            // Verify path starts with "files/" for local attachments
-            let path = attachment.path.as_ref().unwrap();
-            assert!(
-                path.starts_with("files/"),
-                "Path should start with 'files/', got: {}",
-                path
-            );
+            // Only verify path for attachments that have local files
+            // (some attachments are link-mode only and don't have local files)
+            if let Some(path) = &attachment.path {
+                attachments_with_paths += 1;
+                // Verify path starts with "files/" for local attachments
+                assert!(
+                    path.starts_with("files/"),
+                    "Path should start with 'files/', got: {}",
+                    path
+                );
+            }
         }
     }
 
-    // Verify at least one item has attachments with paths
+    // Verify at least some attachments have paths
     assert!(
-        !items_with_attachments.is_empty(),
-        "Should have at least one item with attachments"
+        attachments_with_paths > 0,
+        "Should have at least one attachment with a local file path"
     );
 }
 
@@ -69,16 +69,16 @@ fn test_specific_attachment_path() {
     let extractor = Extractor::new(&graph);
     let items = extractor.extract_all();
 
-    // Find the specific item we know has attachments
+    // Find the specific item we know has attachments (use more specific title)
     let item = items
         .iter()
         .find(|item| {
             item.title
                 .as_ref()
-                .map(|t| t.contains("Laser Triangulation"))
+                .map(|t| t.contains("Full simulation model for laser triangulation"))
                 .unwrap_or(false)
         })
-        .expect("Should find the laser triangulation item");
+        .expect("Should find the 'Full simulation model' item");
 
     println!("Found item: {:?}", item.title);
     println!("Attachments: {}", item.attachments.len());
