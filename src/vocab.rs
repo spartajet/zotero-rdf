@@ -35,6 +35,8 @@ pub static DC_DATE: Lazy<NamedNode> =
     Lazy::new(|| NamedNode::new_unchecked(format!("{}date", NS_DC)));
 pub static DC_IDENTIFIER: Lazy<NamedNode> =
     Lazy::new(|| NamedNode::new_unchecked(format!("{}identifier", NS_DC)));
+pub static DC_SUBJECT: Lazy<NamedNode> =
+    Lazy::new(|| NamedNode::new_unchecked(format!("{}subject", NS_DC)));
 
 // Dublin Core Terms
 pub static DCTERMS_ABSTRACT: Lazy<NamedNode> =

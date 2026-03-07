@@ -22,6 +22,7 @@ use serde::{Deserialize, Serialize};
 /// * `doi` - DOI identifier
 /// * `abstract_note` - Abstract
 /// * `attachments` - List of attachments (PDFs, etc.)
+/// * `tags` - List of tags (from dc:subject/z:AutomaticTag)
 ///
 /// # Example
 ///
@@ -41,6 +42,7 @@ use serde::{Deserialize, Serialize};
 ///     doi: Some("10.1234/example".to_string()),
 ///     abstract_note: Some("This is an abstract.".to_string()),
 ///     attachments: vec![],
+///     tags: vec!["research".to_string(), "paper".to_string()],
 /// };
 ///
 /// assert_eq!(item.authors[0].display_name(), "Doe, John");
@@ -91,6 +93,12 @@ pub struct ZoteroItem {
     /// Attachments are linked to the main item via the `link:link` predicate.
     /// An item may have multiple attachments (e.g., PDF, HTML snapshot).
     pub attachments: Vec<Attachment>,
+
+    /// List of tags
+    ///
+    /// Tags are extracted from `dc:subject` predicates,
+    /// where each subject contains a `z:AutomaticTag` blank node with an `rdf:value` literal.
+    pub tags: Vec<String>,
 }
 
 /// Represents author information

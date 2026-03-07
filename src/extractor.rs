@@ -11,6 +11,7 @@ use tracing::{debug, info, instrument, trace, warn};
 /// - Titles, dates, DOIs, abstracts
 /// - Author lists (in original order)
 /// - Attachments (PDFs, etc.)
+/// - Tags (from dc:subject predicates)
 ///
 /// # Example
 ///
@@ -130,6 +131,9 @@ impl<'a> Extractor<'a> {
             debug!("Item has {} attachments", attachments.len());
         }
 
+        // 5. Extract tags
+        let tags = self.extract_tags(subject);
+
         Some(ZoteroItem {
             uri,
             item_type,
@@ -139,6 +143,7 @@ impl<'a> Extractor<'a> {
             doi,
             abstract_note,
             attachments,
+            tags,
         })
     }
 
@@ -224,6 +229,53 @@ impl<'a> Extractor<'a> {
         }
 
         attachments
+    }
+
+    /// Extracts tag list from dc:subject predicates
+    ///
+    /// Zotero stores tags as dc:subject predicates, where each subject
+    /// contains a z:AutomaticTag blank node with an rdf:value literal.
+    ///
+    /// # RDF Structure
+    ///
+    /// ```xml
+    /// <dc:subject>
+    ///    <z:AutomaticTag><rdf:value>tag name</rdf:value></z:AutomaticTag>
+    /// </dc:subject>
+    /// ```
+    #[instrument(skip(self), fields(uri = %subject))]
+    fn extract_tags(&self, subject: &NamedOrBlankNode) -> Vec<String> {
+        let mut tags = Vec::new();
+
+        // Find all dc:subject predicates for this item
+        for triple in self.graph.triples_for_subject(subject) {
+            if triple.predicate != vocab::DC_SUBJECT.as_ref() {
+                continue;
+            }
+
+            // The object should be a BlankNode (z:AutomaticTag)
+            let tag_blank_node = match &triple.object {
+                oxrdf::TermRef::BlankNode(bn) => NamedOrBlankNode::from(*bn),
+                _ => {
+                    trace!("Skipping non-blank-node tag object: {}", triple.object);
+                    continue;
+                }
+            };
+
+            // Extract the rdf:value from the blank node
+            if let Some(tag_value) = self.get_literal(&tag_blank_node, &vocab::RDF_VALUE) {
+                trace!("Extracted tag: {}", tag_value);
+                tags.push(tag_value);
+            } else {
+                trace!("Tag blank node has no rdf:value, skipping");
+            }
+        }
+
+        if !tags.is_empty() {
+            debug!("Extracted {} tags", tags.len());
+        }
+
+        tags
     }
 
     /// Extracts attachment information from a NamedOrBlankNode
