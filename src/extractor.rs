@@ -1,4 +1,4 @@
-use crate::model::{Attachment, Author, ZoteroItem};
+use crate::model::{Attachment, Author, Journal, ZoteroItem};
 use crate::vocab;
 use oxrdf::{Graph, NamedOrBlankNode, Term};
 use std::collections::HashSet;
@@ -134,6 +134,9 @@ impl<'a> Extractor<'a> {
         // 5. Extract tags
         let tags = self.extract_tags(subject);
 
+        // 6. Extract journal information
+        let journal = self.extract_journal(subject);
+
         Some(ZoteroItem {
             uri,
             item_type,
@@ -144,6 +147,7 @@ impl<'a> Extractor<'a> {
             abstract_note,
             attachments,
             tags,
+            journal,
         })
     }
 
@@ -276,6 +280,83 @@ impl<'a> Extractor<'a> {
         }
 
         tags
+    }
+
+    /// Extracts journal information from dcterms:isPartOf -> bib:Journal
+    ///
+    /// Zotero stores journal information in a `bib:Journal` node linked via
+    /// the `dcterms:isPartOf` predicate.
+    ///
+    /// # RDF Structure
+    ///
+    /// ```xml
+    /// <dcterms:isPartOf>
+    ///     <bib:Journal>
+    ///         <dc:title>Journal Name</dc:title>
+    ///         <dcterms:alternative>J. Name</dcterms:alternative>
+    ///         <prism:volume>123</prism:volume>
+    ///         <prism:number>4</prism:number>
+    ///     </bib:Journal>
+    /// </dcterms:isPartOf>
+    /// ```
+    ///
+    /// Or via URI reference:
+    /// ```xml
+    /// <dcterms:isPartOf rdf:resource="urn:issn:XXXX"/>
+    /// ...
+    /// <bib:Journal rdf:about="urn:issn:XXXX">
+    ///     <dc:title>Journal Name</dc:title>
+    /// </bib:Journal>
+    /// ```
+    #[instrument(skip(self), fields(uri = %subject))]
+    fn extract_journal(&self, subject: &NamedOrBlankNode) -> Option<Journal> {
+        // Find dcterms:isPartOf predicate
+        let is_part_of_obj = self.get_object(subject, &vocab::DCTERMS_IS_PART_OF)?;
+
+        // Get the subject of the Journal node
+        let journal_subject = term_to_subject(&is_part_of_obj)?;
+
+        // Verify it's a bib:Journal (optional check, but good for correctness)
+        // Note: Some RDF exports might not have explicit rdf:type, so we still try to extract
+        let is_journal = self
+            .get_object(&journal_subject, &vocab::RDF_TYPE)
+            .map(|t| {
+                if let Term::NamedNode(nn) = t {
+                    nn.as_str() == vocab::BIB_JOURNAL.as_str()
+                } else {
+                    false
+                }
+            })
+            .unwrap_or(true); // If no type, assume it could be a journal
+
+        if !is_journal {
+            trace!("isPartOf target is not a bib:Journal, skipping");
+            return None;
+        }
+
+        // Extract journal fields
+        let title = self.get_literal(&journal_subject, &vocab::DC_TITLE);
+        let number = self.get_literal(&journal_subject, &vocab::PRISM_NUMBER);
+        let volume = self.get_literal(&journal_subject, &vocab::PRISM_VOLUME);
+
+        // Only return Journal if at least one field has data
+        if title.is_none() && number.is_none() && volume.is_none() {
+            trace!("Journal node has no extractable fields, returning None");
+            return None;
+        }
+
+        let journal = Journal {
+            title,
+            number,
+            volume,
+        };
+
+        debug!(
+            "Extracted journal: {:?}",
+            journal.title.as_deref().unwrap_or("(no title)")
+        );
+
+        Some(journal)
     }
 
     /// Extracts attachment information from a NamedOrBlankNode

@@ -63,7 +63,7 @@ mod vocab;
 // --- Public API exports ---
 pub use error::{ErrorLocation, ParseOptions, ParseStats, ZoteroRdfError};
 pub use extractor::Extractor;
-pub use model::{Attachment, Author, ZoteroItem};
+pub use model::{Attachment, Author, Journal, ZoteroItem};
 pub use oxrdf::Graph;
 pub use parser::{
     DEFAULT_BASE_IRI, parse_file, parse_file_with_base, parse_file_with_options,

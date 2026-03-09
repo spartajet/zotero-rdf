@@ -10,6 +10,7 @@ pub const NS_FOAF: &str = "http://xmlns.com/foaf/0.1/";
 pub const NS_BIBO: &str = "http://purl.org/ontology/bibo/";
 pub const NS_BIB: &str = "http://purl.org/net/biblio#";
 pub const NS_LINK: &str = "http://purl.org/rss/1.0/modules/link/";
+pub const NS_PRISM: &str = "http://prismstandard.org/namespaces/1.2/basic/";
 
 // --- Pre-constructed NamedNode static variables (for efficient queries) ---
 // Using static instead of const because Lazy<T> has interior mutability
@@ -41,10 +42,14 @@ pub static DC_SUBJECT: Lazy<NamedNode> =
 // Dublin Core Terms
 pub static DCTERMS_ABSTRACT: Lazy<NamedNode> =
     Lazy::new(|| NamedNode::new_unchecked(format!("{}abstract", NS_DCTERMS)));
+pub static DCTERMS_IS_PART_OF: Lazy<NamedNode> =
+    Lazy::new(|| NamedNode::new_unchecked(format!("{}isPartOf", NS_DCTERMS)));
 
 // BIB (Biblio)
 pub static BIB_AUTHORS: Lazy<NamedNode> =
     Lazy::new(|| NamedNode::new_unchecked(format!("{}authors", NS_BIB)));
+pub static BIB_JOURNAL: Lazy<NamedNode> =
+    Lazy::new(|| NamedNode::new_unchecked(format!("{}Journal", NS_BIB)));
 
 // FOAF (Author info)
 pub static FOAF_SURNAME: Lazy<NamedNode> =
@@ -61,6 +66,12 @@ pub static LINK_LINK: Lazy<NamedNode> =
     Lazy::new(|| NamedNode::new_unchecked(format!("{}link", NS_LINK)));
 pub static LINK_TYPE: Lazy<NamedNode> =
     Lazy::new(|| NamedNode::new_unchecked(format!("{}type", NS_LINK)));
+
+// PRISM (Publishing Requirements for Industry Standard Metadata)
+pub static PRISM_VOLUME: Lazy<NamedNode> =
+    Lazy::new(|| NamedNode::new_unchecked(format!("{}volume", NS_PRISM)));
+pub static PRISM_NUMBER: Lazy<NamedNode> =
+    Lazy::new(|| NamedNode::new_unchecked(format!("{}number", NS_PRISM)));
 
 /// Checks if a predicate is an RDF ordinal property (rdf:_1, rdf:_2, ...)
 ///
