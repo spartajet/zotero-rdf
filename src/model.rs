@@ -4,6 +4,7 @@
 //! - [`ZoteroItem`]: Represents a bibliographic item (journal article, book, etc.)
 //! - [`Author`]: Represents author information
 //! - [`Attachment`]: Represents attachment information (PDFs, etc.)
+//! - [`Journal`]: Represents journal information
 
 use serde::{Deserialize, Serialize};
 
@@ -23,6 +24,7 @@ use serde::{Deserialize, Serialize};
 /// * `abstract_note` - Abstract
 /// * `attachments` - List of attachments (PDFs, etc.)
 /// * `tags` - List of tags (from dc:subject/z:AutomaticTag)
+/// * `journal` - Journal information (for journalArticle type)
 ///
 /// # Example
 ///
@@ -43,6 +45,7 @@ use serde::{Deserialize, Serialize};
 ///     abstract_note: Some("This is an abstract.".to_string()),
 ///     attachments: vec![],
 ///     tags: vec!["research".to_string(), "paper".to_string()],
+///     journal: None,
 /// };
 ///
 /// assert_eq!(item.authors[0].display_name(), "Doe, John");
@@ -99,6 +102,12 @@ pub struct ZoteroItem {
     /// Tags are extracted from `dc:subject` predicates,
     /// where each subject contains a `z:AutomaticTag` blank node with an `rdf:value` literal.
     pub tags: Vec<String>,
+
+    /// Journal information (for journalArticle type)
+    ///
+    /// Extracted from `bib:Journal` node linked via `dcterms:isPartOf` predicate.
+    /// Contains journal title, abbreviation, volume, and issue number.
+    pub journal: Option<Journal>,
 }
 
 /// Represents author information
@@ -226,4 +235,40 @@ pub struct Attachment {
     ///
     /// Example: `https://example.com/paper.pdf`
     pub url: Option<String>,
+}
+
+/// Represents journal information
+///
+/// Journal information is extracted from the `bib:Journal` node,
+/// which is linked to the main item via the `dcterms:isPartOf` predicate.
+///
+/// # Example
+///
+/// ```
+/// use zotero_rdf::Journal;
+///
+/// let journal = Journal {
+///     title: Some("Nature".to_string()),
+///     volume: Some("123".to_string()),
+///     number: Some("4".to_string()),
+/// };
+///
+/// assert_eq!(journal.title, Some("Nature".to_string()));
+/// ```
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Journal {
+    /// Journal title
+    ///
+    /// Extracted from `dc:title` predicate in the Journal node.
+    pub title: Option<String>,
+
+    /// Volume number
+    ///
+    /// Extracted from `prism:volume` predicate in the Journal node.
+    pub volume: Option<String>,
+
+    /// Issue number
+    ///
+    /// Extracted from `prism:number` predicate in the Journal node.
+    pub number: Option<String>,
 }
